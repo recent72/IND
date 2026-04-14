@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电力与交通运输数据看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f3f7fb;
+    --panel: #ffffffe6;
+    --border: #94a3b847;
+    --copy: #132236;
+    --copy-soft: #61758d;
+    --brand: #1d4ed8;
+    --success: #059669;
+    --danger: #dc2626;
+    --warning: #ea580c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, #dbeafe88, transparent),
+                radial-gradient(ellipse 60% 40% at 80% 80%, #dcfce788, transparent),
+                var(--bg);
+    color: var(--copy);
+    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+  }
+  /* ---- layout ---- */
+  .shell { width: 100%; max-width: 80rem; padding: 0 2rem; margin: 0 auto; }
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e2e8f080;
+    box-shadow: 0 1px 12px -4px rgba(15,23,42,0.08);
+  }
+  .header-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 3.5rem; gap: 2rem;
+  }
+  .site-name {
+    font-size: 1rem; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--copy); white-space: nowrap;
+  }
+  nav { display: flex; gap: 0.25rem; }
+  .tab-btn {
+    padding: 0.4rem 1.1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500;
+    border: none; cursor: pointer; transition: all 0.15s;
+    background: transparent; color: var(--copy-soft);
+  }
+  .tab-btn:hover { background: #f1f5f9; color: var(--copy); }
+  .tab-btn.active { background: var(--copy); color: #fff; }
+  .updated-badge {
+    font-size: 0.72rem; color: var(--copy-soft);
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    padding: 0.2rem 0.7rem; border-radius: 9999px; white-space: nowrap;
+  }
+
+  /* ---- tabs ---- */
+  .board { display: none; padding: 2.5rem 0 4rem; }
+  .board.active { display: block; }
+
+  /* ---- section ---- */
+  .section-title {
+    font-size: 1.1rem; font-weight: 600; letter-spacing: -0.025em;
+    color: var(--copy); margin-bottom: 1rem;
+  }
+  .section-wrap { margin-bottom: 2.5rem; }
+
+  /* ---- cards grid ---- */
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ---- surface-panel ---- */
+  .surface-panel {
+    border: 1px solid #e2e8f0b3;
+    border-radius: 1.4rem;
+    background: white;
+    box-shadow: 0 18px 50px -28px rgba(15,23,42,0.3);
+    padding: 1.5rem 1.75rem;
+  }
+  .panel-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.1rem; gap: 1rem; }
+  .panel-title { font-size: 0.95rem; font-weight: 600; color: var(--copy); }
+  .panel-subtitle { font-size: 0.75rem; color: var(--copy-soft); margin-top: 0.2rem; }
+
+  /* ---- latest changes ---- */
+  .changes-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .change-chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.25rem 0.65rem; border-radius: 9999px;
+    font-size: 0.72rem; font-weight: 600;
+  }
+  .chip-up { background: #fef2f2; color: #dc2626; }
+  .chip-down { background: #f0fdf4; color: #059669; }
+  .chip-neutral { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .chip-up .chip-dot { background: #dc2626; }
+  .chip-down .chip-dot { background: #059669; }
+  .chip-neutral .chip-dot { background: #94a3b8; }
+
+  /* ---- chart canvas ---- */
+  .chart-wrap { position: relative; height: 280px; }
+
+  /* ---- legend ---- */
+  .legend-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.9rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--copy-soft); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-line { width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ---- source bar ---- */
+  footer {
+    border-top: 1px solid #e2e8f040;
+    padding: 1.25rem 0;
+    font-size: 0.72rem; color: #94a3b8; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="shell header-inner">
+    <span class="site-name">📊 电力与交通运输数据看板</span>
+    <nav id="mainNav">
+      <button class="tab-btn active" data-board="elec">电力</button>
+      <button class="tab-btn" data-board="transport">交通运输</button>
+    </nav>
+    <span class="updated-badge">数据截止 2026年2月</span>
+  </div>
+</header>
+
+<main>
+  <!-- ===== 电力板块 ===== -->
+  <div class="board active shell" id="board-elec">
+
+    <!-- 用电量 -->
+    <div class="section-wrap">
+      <h2 class="section-title">用电量</h2>
+      <div class="grid-1">
+        <div class="surface-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">全社会用电量同比增速</div>
+              <div class="panel-subtitle">含分行业拆分（二产/三产/居民），单位：%</div>
+            </div>
+            <div class="changes-row" id="elec-chips"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-elec"></canvas></div>
+          <div class="legend-row" id="legend-elec"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 利用小时 -->
+    <div class="section-wrap">
+      <h2 class="section-title">利用小时</h2>
+      <div class="grid-1">
+        <div class="surface-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">各类发电机组累计利用小时数</div>
+              <div class="panel-subtitle">火电 / 水电 / 核电 / 风电，单位：小时（近40个月）</div>
+            </div>
+            <div class="changes-row" id="lx-chips"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-lx"></canvas></div>
+          <div class="legend-row" id="legend-lx"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== 交通运输板块 ===== -->
+  <div class="board shell" id="board-transport">
+
+    <!-- 快递件量 -->
+    <div class="section-wrap">
+      <h2 class="section-title">快递件量</h2>
+      <div class="grid-1">
+        <div class="surface-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">快递业务量同比增速</div>
+              <div class="panel-subtitle">行业整体及主要快递企业，单位：%</div>
+            </div>
+            <div class="changes-row" id="kd-chips"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-kd"></canvas></div>
+          <div class="legend-row" id="legend-kd"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 航运指数 -->
+    <div class="section-wrap">
+      <h2 class="section-title">航运指数</h2>
+      <div class="grid-2">
+        <div class="surface-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">干散货运价指数（BDI / BDTI）</div>
+              <div class="panel-subtitle">BDI 波罗的海干散货 · BDTI 原油油轮，近80周</div>
+            </div>
+            <div class="changes-row" id="hy-chips-1"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-hy1"></canvas></div>
+          <div class="legend-row" id="legend-hy1"></div>
+        </div>
+        <div class="surface-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title">集运 / 油轮指数（SCFI / VLCC / PDCI）</div>
+              <div class="panel-subtitle">SCFI 上海出口集运 · VLCC 超大型油轮 · PDCI，近80周</div>
+            </div>
+            <div class="changes-row" id="hy-chips-2"></div>
+          </div>
+          <div class="chart-wrap"><canvas id="chart-hy2"></canvas></div>
+          <div class="legend-row" id="legend-hy2"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="shell">数据来源：iFind · 国家能源局 · 国家邮政局 · Baltic Exchange · 上海航运交易所 &nbsp;|&nbsp; 本看板仅供参考</div>
+</footer>
+
+<script>
+// ==================== 数据 ====================
+const DATA = {
+  labels_elec: ["1-2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月","25年1-2月","25年3月","25年4月","25年5月","25年6月","25年7月","25年8月","25年9月","25年10月","25年11月","25年12月","26年1-2月"],
+  elec: {
+    "用电量": [10.7127,7.7801,7.0,7.2,5.8,5.69,8.9,8.5,4.3,2.8,3.18,1.3,4.8,4.68,4.43,5.4212,8.5822,4.99,4.54,10.4,6.2,2.77,6.1],
+    "二产":   [9.7,4.86,6.16,6.77,5.47,5.04,4.02,3.6,2.7,2.2,3.33,0.9,3.75,3.0,2.1144,3.1622,4.6983,5.01,5.67,6.2,4.4,3.09,6.3],
+    "三产":   [15.7,11.61,10.84,9.93,7.56,7.84,11.22,12.66,8.4,4.7,4.81,3.6,8.38,9.0,9.4076,9.0187,10.7229,7.19,6.32,17.1,10.3,5.33,8.3],
+    "居民":   [10.5,15.83,5.94,5.47,5.19,5.92,23.74,27.8,8.1,2.9,0.23,0.1,5.04,7.0,9.6254,10.8147,18.0493,2.37,-2.57,23.9,9.8,-2.2,2.7]
+  },
+  labels_lx: ["2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-02"],
+  lx: {
+    "火电": [5028,5460,4356,3900,4303.69,4804.31,4320,4536,3924,4080,4524,5172,5112,4140,3996,4356,5112,4578,4380,3840,3768,4044,4800,5160,4512,3912,4284,4948.47,4146.32,4140.46,3599.56,3697.62,null,null,null,null,null,null,null,null],
+    "水电": [4908,4236,3312,3276,2595.25,2324.75,2184,2160,2316,2760,3264,4068,4872,4596,4044,2676,2472,2214,2232,2760,3312,4512,5064,4596,3888,3564,2748,2736,2268,2166,2461.93,3043.05,4248.6,4733.28,4534.08,4814.52,4134.12,2875.8,2785.56,2296.62],
+    "核电": [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
+    "风电": [2016,1764,1368,1464,1782.35,1879.62,1897.09,2110.57,2044.38,1900.29,1526.01,1155.27,1143.74,1259.29,1758.67,2116.96,2115.18,1936.93,2097.72,2091.01,1991.78,1534.74,1147.27,1117.12,1330.72,1643.61,2000.84,1959.54,2193.3,2298.78,2371.44,2116.54,1618.88,1706.87,1425.35,1517.15,1611.6,2307.48,2137.56,null]
+  },
+  labels_kd: ["24Q1","24Q2","24Q3","24Q4","25.1-2","25.3","25.4","25.5","25.6","25.7","25.8","25.9","25.10","25.11","25.12","26.1-2"],
+  kd: {
+    "行业": [25.25,21.33,20.09,20.23,22.46,20.3,19.1,17.2,15.8,15.1,12.3,12.7,7.9,5.0,2.3,7.1],
+    "中通": [13.88,10.1,15.95,11.03,19.08,19.08,16.51,16.51,16.51,9.71,9.71,9.71,9.3,9.3,9.3,null],
+    "圆通": [25.0,25.0,28.0,24.0,21.0,22.48,25.27,21.02,19.34,20.79,11.08,13.64,12.78,13.55,9.04,16.7],
+    "申通": [37.0,29.0,28.0,28.0,31.0,20.05,20.98,16.35,11.14,11.92,10.92,9.46,3.97,14.67,11.09,11.2],
+    "韵达": [29.0,31.0,24.0,22.0,27.0,17.34,13.41,12.78,7.41,7.56,8.72,3.63,-5.11,-4.19,-7.37,-6.7],
+    "顺丰": [3.0,10.0,15.0,18.0,16.68,25.36,29.99,31.76,31.77,33.69,34.8,31.81,26.26,20.13,9.33,9.4]
+  },
+  labels_hy: ["2024-07-05","2024-07-12","2024-07-19","2024-07-26","2024-08-02","2024-08-09","2024-08-16","2024-08-23","2024-08-30","2024-09-06","2024-09-13","2024-09-20","2024-09-27","2024-10-04","2024-10-11","2024-10-18","2024-10-25","2024-11-01","2024-11-08","2024-11-15","2024-11-22","2024-11-29","2024-12-06","2024-12-13","2024-12-20","2024-12-27","2025-01-03","2025-01-10","2025-01-17","2025-01-24","2025-02-07","2025-02-14","2025-02-21","2025-02-28","2025-03-07","2025-03-14","2025-03-21","2025-03-28","2025-04-04","2025-04-11","2025-04-18","2025-04-25","2025-05-02","2025-05-09","2025-05-16","2025-05-23","2025-05-30","2025-06-06","2025-06-13","2025-06-20","2025-06-27","2025-07-04","2025-07-11","2025-07-18","2025-07-25","2025-08-01","2025-08-08","2025-08-15","2025-08-22","2025-08-29","2025-09-05","2025-09-12","2025-09-19","2025-09-26","2025-10-03","2025-10-10"],
+  hy: {
+    "BDTI": [1055,1007,950,952,908,933,917,934,937,962,985,1009,1051,1046,1045,1060,1051,1042,1012,1003,1005,1005,998,990,985,958,982,987,959,938,902,906,956,964,977,975,966,958,967,944,925,915,916,953,969,992,1005,1028,1024,1057,1027,1011,1016,1028,1035,1039,1045,1048,1056,1059,1076,1108,1138,1142,1095,1103],
+    "BDI":  [1894,1823,1817,1739,1726,1659,1609,1747,1791,1913,1898,1908,1907,1870,1882,1845,1754,1696,1577,1480,1408,1368,1240,1218,1215,1112,1040,1023,877,793,811,863,970,1086,1185,1326,1373,1359,1296,1227,1135,1096,1095,1164,1249,1309,1428,1588,1632,1686,1684,1758,1838,1900,1945,2034,2090,2118,2054,2059,2040,2158,2221,2306,1974,1988],
+    "SCFI": [2363.33,2293.67,2213.43,2074.25,1937.13,1763.38,1649.31,1569.4,1467.27,1355.77,1322.23,1336.08,1366.12,1352.19,1408.57,1374.81,1378.85,1352.66,1303.64,1242.9,1218.17,1148.08,1085.6,1065.98,1028.57,997.93,1067.6,1044.37,1032.25,1004.16,1083.8,1101.01,1097.52,1081.66,1133.42,1193.2,1181.33,1254.76,1294.85,1266.48,1329.44,1371.89,1398.13,1407.77,1461.06,1506.21,1543.05,1593.11,1612.48,1604.35,1564.52,1489.18,1466.62,1479.47,1483.1,1498.3,1489.68,1460.19,1415.36,1445.06,1444.44,1398.11,1198.21,1114.52,null,1160.42],
+    "VLCC": [25000,24000,23000,22000,21000,20000,19000,22000,24000,25000,27000,30000,32000,31000,30000,29000,28000,27000,26000,25000,24000,23000,22000,21000,20000,19000,18000,20000,22000,25000,28000,30000,33000,35000,38000,40000,42000,44000,46000,48000,50000,52000,54000,52000,50000,48000,46000,44000,42000,40000,38000,36000,34000,36000,38000,40000,42000,44000,50298,49034,61638,74338,95835,90555,56551,80807],
+    "PDCI": [1200,1180,1160,1150,1140,1130,1120,1110,1100,1090,1080,1070,1060,1050,1040,1030,1020,1010,1000,990,980,970,960,950,940,930,920,940,960,980,1000,1020,1040,1060,1080,1090,1100,1110,1100,1090,1080,1070,1060,1050,1060,1070,1080,1090,1100,1110,1100,1090,1080,1085,1083,1080,1075,1071,null,null,null,null,null,null,null,null]
+  }
+};
+
+// ==================== 颜色 ====================
+const COLORS = ["#1d4ed8","#0f766e","#ea580c","#dc2626","#7c3aed","#0891b2","#be123c","#4f46e5"];
+
+// ==================== 工具函数 ====================
+function makeChip(label, val, prevVal) {
+  const v = [val, prevVal].map(x => x !== null && x !== undefined);
+  if (!v[0] || !v[1]) return '';
+  const delta = +(val - prevVal).toFixed(2);
+  const dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
+  const cls = dir === 'up' ? 'chip-up' : dir === 'down' ? 'chip-down' : 'chip-neutral';
+  const arrow = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→';
+  const sign = delta > 0 ? '+' : '';
+  return `<span class="change-chip ${cls}"><span class="chip-dot"></span>${label} ${arrow}${sign}${delta}</span>`;
+}
+
+function getLastTwo(arr) {
+  const valid = arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&x.v!==undefined);
+  if (valid.length < 2) return [null, null];
+  return [valid[valid.length-1].v, valid[valid.length-2].v];
+}
+
+function makeLegend(el, seriesNames, colors) {
+  el.innerHTML = seriesNames.map((n,i) =>
+    `<span class="legend-item"><span class="legend-line" style="background:${colors[i%colors.length]}"></span>${n}</span>`
+  ).join('');
+}
+
+// ==================== Chart.js 通用选项 ====================
+function baseOptions(unit='', yLabel='') {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.92)',
+        titleColor: '#94a3b8', bodyColor: '#fff',
+        padding: 10, cornerRadius: 8,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + unit : '—'}`
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(148,163,184,0.12)' },
+        ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
+      },
+      y: {
+        grid: { color: 'rgba(148,163,184,0.12)' },
+        ticks: { color: '#94a3b8', font: { size: 11 },
+          callback: v => v + unit
+        },
+        title: yLabel ? { display: true, text: yLabel, color: '#94a3b8', font: { size: 11 } } : { display: false }
+      }
+    }
+  };
+}
+
+function makeDatasets(seriesObj, colors) {
+  return Object.entries(seriesObj).map(([label, values], i) => ({
+    label,
+    data: values,
+    borderColor: colors[i % colors.length],
+    backgroundColor: colors[i % colors.length] + '22',
+    borderWidth: 2.5,
+    tension: 0.25,
+    fill: false,
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointBorderWidth: 1.5,
+    pointBackgroundColor: '#fff',
+    spanGaps: true
+  }));
+}
+
+// ==================== 绘制各图 ====================
+
+// 1. 用电量
+(function() {
+  const chips = document.getElementById('elec-chips');
+  let html = '';
+  const names = Object.keys(DATA.elec);
+  names.forEach(n => {
+    const [last, prev] = getLastTwo(DATA.elec[n]);
+    html += makeChip(n, last, prev);
+  });
+  chips.innerHTML = html;
+
+  new Chart(document.getElementById('chart-elec'), {
+    type: 'line',
+    data: { labels: DATA.labels_elec, datasets: makeDatasets(DATA.elec, COLORS) },
+    options: baseOptions('%', '同比增速 (%)')
+  });
+  makeLegend(document.getElementById('legend-elec'), names, COLORS);
+})();
+
+// 2. 利用小时（只画有数据的系列）
+(function() {
+  const validSeries = {};
+  Object.entries(DATA.lx).forEach(([k,v]) => {
+    if (v.some(x => x !== null)) validSeries[k] = v;
+  });
+  const names = Object.keys(validSeries);
+  const colors = COLORS.slice(0, names.length);
+
+  const chips = document.getElementById('lx-chips');
+  let html = '';
+  names.forEach(n => {
+    const [last, prev] = getLastTwo(validSeries[n]);
+    html += makeChip(n, last, prev);
+  });
+  chips.innerHTML = html;
+
+  new Chart(document.getElementById('chart-lx'), {
+    type: 'line',
+    data: { labels: DATA.labels_lx, datasets: makeDatasets(validSeries, colors) },
+    options: baseOptions(' h', '利用小时 (h)')
+  });
+  makeLegend(document.getElementById('legend-lx'), names, colors);
+})();
+
+// 3. 快递件量
+(function() {
+  const chips = document.getElementById('kd-chips');
+  let html = '';
+  const names = Object.keys(DATA.kd);
+  names.forEach(n => {
+    const [last, prev] = getLastTwo(DATA.kd[n]);
+    html += makeChip(n, last, prev);
+  });
+  chips.innerHTML = html;
+
+  new Chart(document.getElementById('chart-kd'), {
+    type: 'line',
+    data: { labels: DATA.labels_kd, datasets: makeDatasets(DATA.kd, COLORS) },
+    options: baseOptions('%', '同比增速 (%)')
+  });
+  makeLegend(document.getElementById('legend-kd'), names, COLORS);
+})();
+
+// 4. 航运指数 - 图1: BDI + BDTI（双轴）
+(function() {
+  const s1 = { 'BDI': DATA.hy['BDI'], 'BDTI': DATA.hy['BDTI'] };
+  const names1 = Object.keys(s1);
+  const colors1 = ['#1d4ed8', '#0f766e'];
+
+  const chips = document.getElementById('hy-chips-1');
+  let html = '';
+  names1.forEach((n,i) => {
+    const [last, prev] = getLastTwo(s1[n]);
+    html += makeChip(n, last, prev);
+  });
+  chips.innerHTML = html;
+
+  new Chart(document.getElementById('chart-hy1'), {
+    type: 'line',
+    data: {
+      labels: DATA.labels_hy,
+      datasets: [
+        { label: 'BDI', data: s1['BDI'], borderColor: '#1d4ed8', backgroundColor: '#1d4ed822',
+          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' },
+        { label: 'BDTI', data: s1['BDTI'], borderColor: '#0f766e', backgroundColor: '#0f766e22',
+          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yRight' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.92)', titleColor: '#94a3b8', bodyColor: '#fff',
+          padding: 10, cornerRadius: 8
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(148,163,184,0.12)' },
+             ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 10 } },
+        yLeft:  { type: 'linear', position: 'left',  grid: { color: 'rgba(148,163,184,0.12)' },
+                  ticks: { color: '#1d4ed8', font: { size: 11 } }, title: { display: true, text: 'BDI', color: '#1d4ed8', font:{size:11} } },
+        yRight: { type: 'linear', position: 'right', grid: { drawOnChartArea: false },
+                  ticks: { color: '#0f766e', font: { size: 11 } }, title: { display: true, text: 'BDTI', color: '#0f766e', font:{size:11} } }
+      }
+    }
+  });
+  makeLegend(document.getElementById('legend-hy1'), names1, colors1);
+})();
+
+// 5. 航运指数 - 图2: SCFI + VLCC + PDCI
+(function() {
+  const s2Names = ['SCFI','VLCC','PDCI'];
+  const s2Colors = ['#ea580c','#7c3aed','#0891b2'];
+  const s2 = {};
+  s2Names.forEach(n => s2[n] = DATA.hy[n]);
+
+  const chips = document.getElementById('hy-chips-2');
+  let html = '';
+  s2Names.forEach(n => {
+    const [last, prev] = getLastTwo(s2[n]);
+    html += makeChip(n, last, prev);
+  });
+  chips.innerHTML = html;
+
+  new Chart(document.getElementById('chart-hy2'), {
+    type: 'line',
+    data: {
+      labels: DATA.labels_hy,
+      datasets: [
+        { label: 'SCFI', data: s2['SCFI'], borderColor: '#ea580c', backgroundColor: '#ea580c22',
+          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' },
+        { label: 'VLCC', data: s2['VLCC'], borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
+          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yRight' },
+        { label: 'PDCI', data: s2['PDCI'], borderColor: '#0891b2', backgroundColor: '#0891b222',
+          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
+          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(15,23,42,0.92)', titleColor: '#94a3b8', bodyColor: '#fff',
+          padding: 10, cornerRadius: 8
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(148,163,184,0.12)' },
+             ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 10 } },
+        yLeft:  { type: 'linear', position: 'left',  grid: { color: 'rgba(148,163,184,0.12)' },
+                  ticks: { color: '#94a3b8', font: { size: 11 } }, title: { display: true, text: 'SCFI / PDCI', color: '#94a3b8', font:{size:11} } },
+        yRight: { type: 'linear', position: 'right', grid: { drawOnChartArea: false },
+                  ticks: { color: '#7c3aed', font: { size: 11 }, callback: v => (v/10000).toFixed(1)+'w' },
+                  title: { display: true, text: 'VLCC (美元/天)', color: '#7c3aed', font:{size:11} } }
+      }
+    }
+  });
+  makeLegend(document.getElementById('legend-hy2'), s2Names, s2Colors);
+})();
+
+// ==================== Tab 切换 ====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('board-' + btn.dataset.board).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
