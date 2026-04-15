@@ -2,525 +2,483 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>电力与交通运输数据看板</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>行业数据看板</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #f3f7fb;
-    --panel: #ffffffe6;
-    --border: #94a3b847;
-    --copy: #132236;
-    --copy-soft: #61758d;
-    --brand: #1d4ed8;
-    --success: #059669;
-    --danger: #dc2626;
-    --warning: #ea580c;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: radial-gradient(ellipse 80% 60% at 50% -10%, #dbeafe88, transparent),
-                radial-gradient(ellipse 60% 40% at 80% 80%, #dcfce788, transparent),
-                var(--bg);
-    color: var(--copy);
-    font-family: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
-    min-height: 100vh;
-  }
-  /* ---- layout ---- */
-  .shell { width: 100%; max-width: 80rem; padding: 0 2rem; margin: 0 auto; }
-  header {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid #e2e8f080;
-    box-shadow: 0 1px 12px -4px rgba(15,23,42,0.08);
-  }
-  .header-inner {
-    display: flex; align-items: center; justify-content: space-between;
-    height: 3.5rem; gap: 2rem;
-  }
-  .site-name {
-    font-size: 1rem; font-weight: 700; letter-spacing: -0.02em;
-    color: var(--copy); white-space: nowrap;
-  }
-  nav { display: flex; gap: 0.25rem; }
-  .tab-btn {
-    padding: 0.4rem 1.1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500;
-    border: none; cursor: pointer; transition: all 0.15s;
-    background: transparent; color: var(--copy-soft);
-  }
-  .tab-btn:hover { background: #f1f5f9; color: var(--copy); }
-  .tab-btn.active { background: var(--copy); color: #fff; }
-  .updated-badge {
-    font-size: 0.72rem; color: var(--copy-soft);
-    background: #f1f5f9; border: 1px solid #e2e8f0;
-    padding: 0.2rem 0.7rem; border-radius: 9999px; white-space: nowrap;
-  }
-
-  /* ---- tabs ---- */
-  .board { display: none; padding: 2.5rem 0 4rem; }
-  .board.active { display: block; }
-
-  /* ---- section ---- */
-  .section-title {
-    font-size: 1.1rem; font-weight: 600; letter-spacing: -0.025em;
-    color: var(--copy); margin-bottom: 1rem;
-  }
-  .section-wrap { margin-bottom: 2.5rem; }
-
-  /* ---- cards grid ---- */
-  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 1.25rem; }
-  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  /* ---- surface-panel ---- */
-  .surface-panel {
-    border: 1px solid #e2e8f0b3;
-    border-radius: 1.4rem;
-    background: white;
-    box-shadow: 0 18px 50px -28px rgba(15,23,42,0.3);
-    padding: 1.5rem 1.75rem;
-  }
-  .panel-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.1rem; gap: 1rem; }
-  .panel-title { font-size: 0.95rem; font-weight: 600; color: var(--copy); }
-  .panel-subtitle { font-size: 0.75rem; color: var(--copy-soft); margin-top: 0.2rem; }
-
-  /* ---- latest changes ---- */
-  .changes-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .change-chip {
-    display: inline-flex; align-items: center; gap: 0.35rem;
-    padding: 0.25rem 0.65rem; border-radius: 9999px;
-    font-size: 0.72rem; font-weight: 600;
-  }
-  .chip-up { background: #fef2f2; color: #dc2626; }
-  .chip-down { background: #f0fdf4; color: #059669; }
-  .chip-neutral { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-  .chip-dot { width: 6px; height: 6px; border-radius: 50%; }
-  .chip-up .chip-dot { background: #dc2626; }
-  .chip-down .chip-dot { background: #059669; }
-  .chip-neutral .chip-dot { background: #94a3b8; }
-
-  /* ---- chart canvas ---- */
-  .chart-wrap { position: relative; height: 280px; }
-
-  /* ---- legend ---- */
-  .legend-row { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.9rem; }
-  .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.72rem; color: var(--copy-soft); }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .legend-line { width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-
-  /* ---- source bar ---- */
-  footer {
-    border-top: 1px solid #e2e8f040;
-    padding: 1.25rem 0;
-    font-size: 0.72rem; color: #94a3b8; text-align: center;
-  }
+:root{--bg:#f3f7fb;--copy:#132236;--copy-soft:#61758d;--brand:#1d4ed8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,#dbeafe66,transparent),
+             radial-gradient(ellipse 60% 40% at 80% 80%,#dcfce766,transparent),var(--bg);
+  color:var(--copy);
+  font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;font-size:14px;
+}
+.shell{width:100%;max-width:90rem;padding:0 1.5rem;margin:0 auto;}
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid #e2e8f066;
+  box-shadow:0 1px 12px -4px rgba(15,23,42,.08);
+}
+.header-inner{display:flex;align-items:center;justify-content:space-between;height:3.5rem;gap:1.5rem;}
+.site-name{font-size:1rem;font-weight:700;letter-spacing:-.02em;white-space:nowrap;}
+nav{display:flex;gap:.2rem;flex-wrap:wrap;}
+.tab-btn{padding:.38rem 1.1rem;border-radius:9999px;font-size:.875rem;font-weight:500;border:none;cursor:pointer;transition:all .15s;background:transparent;color:var(--copy-soft);}
+.tab-btn:hover{background:#f1f5f9;color:var(--copy);}
+.tab-btn.active{background:var(--brand);color:#fff;box-shadow:0 2px 8px rgba(29,78,216,.3);}
+.date-badge{font-size:.75rem;font-weight:600;padding:.25rem .75rem;background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;border-radius:9999px;white-space:nowrap;}
+.board{display:none;}.board.active{display:block;}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;}
+.grid-1{display:grid;grid-template-columns:1fr;gap:1.25rem;}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr;}}
+.sub-section{margin:1.5rem 0 .75rem;}
+.sub-section h2{font-size:1.05rem;font-weight:700;color:var(--copy);padding-left:.75rem;border-left:3px solid var(--brand);}
+.surface-panel{border:1px solid #e2e8f0b3;border-radius:1.2rem;background:white;box-shadow:0 18px 50px -28px rgba(15,23,42,.22);overflow:hidden;}
+.chart-card{padding:1.1rem 1.25rem 1rem;}
+.card-header{margin-bottom:.5rem;}
+.title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;}
+.section-title{font-size:.95rem;font-weight:700;letter-spacing:-.02em;color:var(--copy);line-height:1.4;}
+.delta-chips{display:flex;gap:.3rem;flex-wrap:wrap;flex-shrink:0;margin-top:.05rem;max-width:55%;justify-content:flex-end;}
+.delta-chip{display:inline-flex;align-items:center;gap:.15rem;font-size:.69rem;font-weight:600;padding:.14rem .42rem;border-radius:9999px;white-space:nowrap;}
+.dc-up{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+.dc-dn{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;}
+.dc-flat{background:#f8fafc;color:#64748b;border:1px solid #e2e8f0;}
+.meta-line{display:flex;gap:.35rem;flex-wrap:wrap;margin:.28rem 0 .18rem;}
+.meta-chip{border:1px solid #e2e8f0;background:#f8fafc;padding:.1rem .5rem;font-size:.68rem;font-weight:500;color:#64748b;border-radius:9999px;}
+.annotation-text{font-size:.74rem;color:#94a3b8;line-height:1.45;min-height:.9rem;margin:.1rem 0 .2rem;border-left:2px solid #e2e8f0;padding-left:.5rem;font-style:italic;}
+.chart-wrap{position:relative;}
+main{padding:1.25rem 0 2rem;}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="shell header-inner">
-    <span class="site-name">📊 电力与交通运输数据看板</span>
-    <nav id="mainNav">
-      <button class="tab-btn active" data-board="elec">电力</button>
-      <button class="tab-btn" data-board="transport">交通运输</button>
-    </nav>
-    <span class="updated-badge">数据截止 2026年2月</span>
+  <div class="shell">
+    <div class="header-inner">
+      <span class="site-name">⚡ 行业数据看板</span>
+      <nav>
+        <button class="tab-btn active" data-tab="tab-utility">公用事业</button>
+        <button class="tab-btn" data-tab="tab-transport">交通运输</button>
+        <button class="tab-btn" data-tab="tab-grid">电网设备</button>
+        <button class="tab-btn" data-tab="tab-petro">石油石化</button>
+      </nav>
+      <span class="date-badge">数据截至 2026年04月12日</span>
+    </div>
   </div>
 </header>
+<main><div class="shell">
 
-<main>
-  <!-- ===== 电力板块 ===== -->
-  <div class="board active shell" id="board-elec">
-
-    <!-- 用电量 -->
-    <div class="section-wrap">
-      <h2 class="section-title">用电量</h2>
-      <div class="grid-1">
-        <div class="surface-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">全社会用电量同比增速</div>
-              <div class="panel-subtitle">含分行业拆分（二产/三产/居民），单位：%</div>
-            </div>
-            <div class="changes-row" id="elec-chips"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="chart-elec"></canvas></div>
-          <div class="legend-row" id="legend-elec"></div>
-        </div>
-      </div>
+<!-- ══ 公用事业 ══ -->
+<div class="board active" id="tab-utility">
+  <div class="sub-section"><h2>发用电量增速</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">全社会用电量同比增速</h3>
+      <div class="delta-chips" id="chart_elec-chips"></div>
     </div>
-
-    <!-- 利用小时 -->
-    <div class="section-wrap">
-      <h2 class="section-title">利用小时</h2>
-      <div class="grid-1">
-        <div class="surface-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">各类发电机组累计利用小时数</div>
-              <div class="panel-subtitle">火电 / 水电 / 核电 / 风电，单位：小时（近40个月）</div>
-            </div>
-            <div class="changes-row" id="lx-chips"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="chart-lx"></canvas></div>
-          <div class="legend-row" id="legend-lx"></div>
-        </div>
-      </div>
-    </div>
-
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：国家能源局</span></div>
+    <p class="annotation-text"></p>
   </div>
-
-  <!-- ===== 交通运输板块 ===== -->
-  <div class="board shell" id="board-transport">
-
-    <!-- 快递件量 -->
-    <div class="section-wrap">
-      <h2 class="section-title">快递件量</h2>
-      <div class="grid-1">
-        <div class="surface-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">快递业务量同比增速</div>
-              <div class="panel-subtitle">行业整体及主要快递企业，单位：%</div>
-            </div>
-            <div class="changes-row" id="kd-chips"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="chart-kd"></canvas></div>
-          <div class="legend-row" id="legend-kd"></div>
-        </div>
-      </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_elec"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">各电源发电量同比增速</h3>
+      <div class="delta-chips" id="chart_gen-chips"></div>
     </div>
-
-    <!-- 航运指数 -->
-    <div class="section-wrap">
-      <h2 class="section-title">航运指数</h2>
-      <div class="grid-2">
-        <div class="surface-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">干散货运价指数（BDI / BDTI）</div>
-              <div class="panel-subtitle">BDI 波罗的海干散货 · BDTI 原油油轮，近80周</div>
-            </div>
-            <div class="changes-row" id="hy-chips-1"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="chart-hy1"></canvas></div>
-          <div class="legend-row" id="legend-hy1"></div>
-        </div>
-        <div class="surface-panel">
-          <div class="panel-header">
-            <div>
-              <div class="panel-title">集运 / 油轮指数（SCFI / VLCC / PDCI）</div>
-              <div class="panel-subtitle">SCFI 上海出口集运 · VLCC 超大型油轮 · PDCI，近80周</div>
-            </div>
-            <div class="changes-row" id="hy-chips-2"></div>
-          </div>
-          <div class="chart-wrap"><canvas id="chart-hy2"></canvas></div>
-          <div class="legend-row" id="legend-hy2"></div>
-        </div>
-      </div>
-    </div>
-
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：国家统计局</span></div>
+    <p class="annotation-text"></p>
   </div>
-</main>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_gen"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>电价情况</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">各省月度中长期电价</h3>
+      <div class="delta-chips" id="chart_ep-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元/MWh</span><span class="meta-chip">来源：各省电力交易中心</span></div>
+    <p class="annotation-text">代表性省份的月度中长期市场交易综合价，其中江苏为集中竞价成交价</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_ep"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">各省代理购电均价</h3>
+      <div class="delta-chips" id="chart_prx-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元/kWh</span><span class="meta-chip">来源：各省电网公司</span></div>
+    <p class="annotation-text">各省月度电网代理购电电价的算数平均值，反映全国整体电价趋势</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_prx"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>燃气量价</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">国内天然气消费与LNG进口量</h3>
+      <div class="delta-chips" id="chart_gas-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：国家发改委 / 海关总署</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_gas"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">中国进口LNG到岸价</h3>
+      <div class="delta-chips" id="chart_cld-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：美元/百万英热单位</span><span class="meta-chip">来源：同花顺金融</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_cld"></canvas></div>
+</div>
+  </div>
+</div>
 
-<footer>
-  <div class="shell">数据来源：iFind · 国家能源局 · 国家邮政局 · Baltic Exchange · 上海航运交易所 &nbsp;|&nbsp; 本看板仅供参考</div>
-</footer>
+<!-- ══ 交通运输 ══ -->
+<div class="board" id="tab-transport">
+  <div class="sub-section"><h2>航空量价</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">国内航空全票价（同比右轴）</h3>
+      <div class="delta-chips" id="chart_avp-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元 / 同比%</span><span class="meta-chip">来源：Flight AI</span></div>
+    <p class="annotation-text">取最近一周的移动平均值</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_avp"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">国内航空客座率</h3>
+      <div class="delta-chips" id="chart_lf-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：Flight AI</span></div>
+    <p class="annotation-text">取最近一周的移动平均值</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_lf"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>快递量价</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">快递业务量同比增速</h3>
+      <div class="delta-chips" id="chart_kd-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：国家统计局 / 上市公司公告</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_kd"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">快递单票收入（顺丰右轴）</h3>
+      <div class="delta-chips" id="chart_kdp-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元/票</span><span class="meta-chip">来源：上市公司公告</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_kdp"></canvas></div>
+</div>
+  </div>
+  <div class="grid-1">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">快递周度揽收量</h3>
+      <div class="delta-chips" id="chart_kdw-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：亿件</span><span class="meta-chip">来源：交通运输部</span></div>
+    <p class="annotation-text">交通运输部的揽收量口径，与邮政局的业务量口径存在一定差异</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_kdw"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>航运指数</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">集运指数（CCFI &amp; PDCI）</h3>
+      <div class="delta-chips" id="chart_col-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：指数</span><span class="meta-chip">来源：上海航运交易所 / 泛亚电商</span></div>
+    <p class="annotation-text">CCFI代表外贸集运指数，PDCI代表内贸集运指数</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_col"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">油散运价指数（BDTI &amp; BDI）</h3>
+      <div class="delta-chips" id="chart_bdi-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：点</span><span class="meta-chip">来源：波罗的海航运交易所</span></div>
+    <p class="annotation-text">BDTI代表原油海运指数，BDI代表干散货运指数</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_bdi"></canvas></div>
+</div>
+  </div>
+</div>
 
+<!-- ══ 电网设备 ══ -->
+<div class="board" id="tab-grid">
+  <div class="sub-section"><h2>电网投资与招标</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">电网工程投资完成额</h3>
+      <div class="delta-chips" id="chart_gi-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：亿元</span><span class="meta-chip">来源：中国电力企业联合会</span></div>
+    <p class="annotation-text">电网工程投资额口径小于常说的电网投资</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_gi"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">输变电设备招标金额（同比右轴）</h3>
+      <div class="delta-chips" id="chart_tb-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：万元 / 同比%</span><span class="meta-chip">来源：国家电网</span></div>
+    <p class="annotation-text">国家电网总部的输变电设备招标，每年安排六个批次</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_tb"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>电网设备出口</h2></div>
+  <div class="grid-1">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">电力设备出口增速（分地区）</h3>
+      <div class="delta-chips" id="chart_exp_reg-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：海关总署</span></div>
+    <p class="annotation-text">2022-2025年连续保持30-40%高增速</p>
+  </div>
+  <div class="chart-wrap" style="height:280px"><canvas id="chart_exp_reg"></canvas></div>
+</div>
+  </div>
+  <div class="grid-1">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">电力设备出口增速（分产品）</h3>
+      <div class="delta-chips" id="chart_exp_prd-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：%</span><span class="meta-chip">来源：海关总署</span></div>
+    <p class="annotation-text">2022-2025年连续保持30-40%高增速</p>
+  </div>
+  <div class="chart-wrap" style="height:280px"><canvas id="chart_exp_prd"></canvas></div>
+</div>
+  </div>
+</div>
+
+<!-- ══ 石油石化 ══ -->
+<div class="board" id="tab-petro">
+  <div class="sub-section"><h2>石油</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">布伦特期货油价</h3>
+      <div class="delta-chips" id="chart_oil-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：美元/桶</span><span class="meta-chip">来源：商务部</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_oil"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">OPEC原油平均产量</h3>
+      <div class="delta-chips" id="chart_opec-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：万桶/日</span><span class="meta-chip">来源：OPEC</span></div>
+    <p class="annotation-text"></p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_opec"></canvas></div>
+</div>
+  </div>
+  <div class="sub-section"><h2>石化</h2></div>
+  <div class="grid-2">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">海外汽柴油裂解价差</h3>
+      <div class="delta-chips" id="chart_pet-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：美元/桶</span><span class="meta-chip">来源：Wind</span></div>
+    <p class="annotation-text">亚太地区成品油裂解价差，成本按阿曼原油现货价计算</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_pet"></canvas></div>
+</div>
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">聚酯产业链利润</h3>
+      <div class="delta-chips" id="chart_px-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元/吨</span><span class="meta-chip">来源：Wind</span></div>
+    <p class="annotation-text">PX-PTA-涤纶长丝各环节的单吨利润，不考虑库存收益</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_px"></canvas></div>
+</div>
+  </div>
+  <div class="grid-1">
+    <div class="surface-panel chart-card">
+  <div class="card-header">
+    <div class="title-row">
+      <h3 class="section-title">聚氨酯价格与价差（价差右轴）</h3>
+      <div class="delta-chips" id="chart_pu-chips"></div>
+    </div>
+    <div class="meta-line"><span class="meta-chip">单位：元/吨</span><span class="meta-chip">来源：Wind</span></div>
+    <p class="annotation-text">PX-PTA-涤纶长丝各环节的单吨利润，不考虑库存收益</p>
+  </div>
+  <div class="chart-wrap" style="height:260px"><canvas id="chart_pu"></canvas></div>
+</div>
+  </div>
+</div>
+
+</div></main>
 <script>
-// ==================== 数据 ====================
-const DATA = {
-  labels_elec: ["1-2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月","25年1-2月","25年3月","25年4月","25年5月","25年6月","25年7月","25年8月","25年9月","25年10月","25年11月","25年12月","26年1-2月"],
-  elec: {
-    "用电量": [10.7127,7.7801,7.0,7.2,5.8,5.69,8.9,8.5,4.3,2.8,3.18,1.3,4.8,4.68,4.43,5.4212,8.5822,4.99,4.54,10.4,6.2,2.77,6.1],
-    "二产":   [9.7,4.86,6.16,6.77,5.47,5.04,4.02,3.6,2.7,2.2,3.33,0.9,3.75,3.0,2.1144,3.1622,4.6983,5.01,5.67,6.2,4.4,3.09,6.3],
-    "三产":   [15.7,11.61,10.84,9.93,7.56,7.84,11.22,12.66,8.4,4.7,4.81,3.6,8.38,9.0,9.4076,9.0187,10.7229,7.19,6.32,17.1,10.3,5.33,8.3],
-    "居民":   [10.5,15.83,5.94,5.47,5.19,5.92,23.74,27.8,8.1,2.9,0.23,0.1,5.04,7.0,9.6254,10.8147,18.0493,2.37,-2.57,23.9,9.8,-2.2,2.7]
-  },
-  labels_lx: ["2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-02"],
-  lx: {
-    "火电": [5028,5460,4356,3900,4303.69,4804.31,4320,4536,3924,4080,4524,5172,5112,4140,3996,4356,5112,4578,4380,3840,3768,4044,4800,5160,4512,3912,4284,4948.47,4146.32,4140.46,3599.56,3697.62,null,null,null,null,null,null,null,null],
-    "水电": [4908,4236,3312,3276,2595.25,2324.75,2184,2160,2316,2760,3264,4068,4872,4596,4044,2676,2472,2214,2232,2760,3312,4512,5064,4596,3888,3564,2748,2736,2268,2166,2461.93,3043.05,4248.6,4733.28,4534.08,4814.52,4134.12,2875.8,2785.56,2296.62],
-    "核电": [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],
-    "风电": [2016,1764,1368,1464,1782.35,1879.62,1897.09,2110.57,2044.38,1900.29,1526.01,1155.27,1143.74,1259.29,1758.67,2116.96,2115.18,1936.93,2097.72,2091.01,1991.78,1534.74,1147.27,1117.12,1330.72,1643.61,2000.84,1959.54,2193.3,2298.78,2371.44,2116.54,1618.88,1706.87,1425.35,1517.15,1611.6,2307.48,2137.56,null]
-  },
-  labels_kd: ["24Q1","24Q2","24Q3","24Q4","25.1-2","25.3","25.4","25.5","25.6","25.7","25.8","25.9","25.10","25.11","25.12","26.1-2"],
-  kd: {
-    "行业": [25.25,21.33,20.09,20.23,22.46,20.3,19.1,17.2,15.8,15.1,12.3,12.7,7.9,5.0,2.3,7.1],
-    "中通": [13.88,10.1,15.95,11.03,19.08,19.08,16.51,16.51,16.51,9.71,9.71,9.71,9.3,9.3,9.3,null],
-    "圆通": [25.0,25.0,28.0,24.0,21.0,22.48,25.27,21.02,19.34,20.79,11.08,13.64,12.78,13.55,9.04,16.7],
-    "申通": [37.0,29.0,28.0,28.0,31.0,20.05,20.98,16.35,11.14,11.92,10.92,9.46,3.97,14.67,11.09,11.2],
-    "韵达": [29.0,31.0,24.0,22.0,27.0,17.34,13.41,12.78,7.41,7.56,8.72,3.63,-5.11,-4.19,-7.37,-6.7],
-    "顺丰": [3.0,10.0,15.0,18.0,16.68,25.36,29.99,31.76,31.77,33.69,34.8,31.81,26.26,20.13,9.33,9.4]
-  },
-  labels_hy: ["2024-07-05","2024-07-12","2024-07-19","2024-07-26","2024-08-02","2024-08-09","2024-08-16","2024-08-23","2024-08-30","2024-09-06","2024-09-13","2024-09-20","2024-09-27","2024-10-04","2024-10-11","2024-10-18","2024-10-25","2024-11-01","2024-11-08","2024-11-15","2024-11-22","2024-11-29","2024-12-06","2024-12-13","2024-12-20","2024-12-27","2025-01-03","2025-01-10","2025-01-17","2025-01-24","2025-02-07","2025-02-14","2025-02-21","2025-02-28","2025-03-07","2025-03-14","2025-03-21","2025-03-28","2025-04-04","2025-04-11","2025-04-18","2025-04-25","2025-05-02","2025-05-09","2025-05-16","2025-05-23","2025-05-30","2025-06-06","2025-06-13","2025-06-20","2025-06-27","2025-07-04","2025-07-11","2025-07-18","2025-07-25","2025-08-01","2025-08-08","2025-08-15","2025-08-22","2025-08-29","2025-09-05","2025-09-12","2025-09-19","2025-09-26","2025-10-03","2025-10-10"],
-  hy: {
-    "BDTI": [1055,1007,950,952,908,933,917,934,937,962,985,1009,1051,1046,1045,1060,1051,1042,1012,1003,1005,1005,998,990,985,958,982,987,959,938,902,906,956,964,977,975,966,958,967,944,925,915,916,953,969,992,1005,1028,1024,1057,1027,1011,1016,1028,1035,1039,1045,1048,1056,1059,1076,1108,1138,1142,1095,1103],
-    "BDI":  [1894,1823,1817,1739,1726,1659,1609,1747,1791,1913,1898,1908,1907,1870,1882,1845,1754,1696,1577,1480,1408,1368,1240,1218,1215,1112,1040,1023,877,793,811,863,970,1086,1185,1326,1373,1359,1296,1227,1135,1096,1095,1164,1249,1309,1428,1588,1632,1686,1684,1758,1838,1900,1945,2034,2090,2118,2054,2059,2040,2158,2221,2306,1974,1988],
-    "SCFI": [2363.33,2293.67,2213.43,2074.25,1937.13,1763.38,1649.31,1569.4,1467.27,1355.77,1322.23,1336.08,1366.12,1352.19,1408.57,1374.81,1378.85,1352.66,1303.64,1242.9,1218.17,1148.08,1085.6,1065.98,1028.57,997.93,1067.6,1044.37,1032.25,1004.16,1083.8,1101.01,1097.52,1081.66,1133.42,1193.2,1181.33,1254.76,1294.85,1266.48,1329.44,1371.89,1398.13,1407.77,1461.06,1506.21,1543.05,1593.11,1612.48,1604.35,1564.52,1489.18,1466.62,1479.47,1483.1,1498.3,1489.68,1460.19,1415.36,1445.06,1444.44,1398.11,1198.21,1114.52,null,1160.42],
-    "VLCC": [25000,24000,23000,22000,21000,20000,19000,22000,24000,25000,27000,30000,32000,31000,30000,29000,28000,27000,26000,25000,24000,23000,22000,21000,20000,19000,18000,20000,22000,25000,28000,30000,33000,35000,38000,40000,42000,44000,46000,48000,50000,52000,54000,52000,50000,48000,46000,44000,42000,40000,38000,36000,34000,36000,38000,40000,42000,44000,50298,49034,61638,74338,95835,90555,56551,80807],
-    "PDCI": [1200,1180,1160,1150,1140,1130,1120,1110,1100,1090,1080,1070,1060,1050,1040,1030,1020,1010,1000,990,980,970,960,950,940,930,920,940,960,980,1000,1020,1040,1060,1080,1090,1100,1110,1100,1090,1080,1070,1060,1050,1060,1070,1080,1090,1100,1110,1100,1090,1080,1085,1083,1080,1075,1071,null,null,null,null,null,null,null,null]
-  }
+const D = {
+  elec:    {labels:["2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30","2025-07-31","2025-08-31","2025-09-30","2025-10-31","2025-11-30","2025-12-31","2026-02-28"],series:{"全社会":[11.0,7.4,7.0,7.2,5.8,5.7,8.9,8.5,4.3,2.8,3.27294,8.6,4.8,4.7,4.4,5.4,8.6,5.0,4.5,10.4,6.2,2.773062,6.1],"二产":[9.7,4.9,6.2,6.8,5.5,5.0,4.0,3.6,2.7,2.2,2.239602,12.4,3.8,3.0,2.1,3.2,4.7,5.0,5.7,6.2,4.4,3.094576,6.3],"三产":[15.7,11.6,10.8,9.9,7.6,7.8,11.2,12.7,8.4,4.7,5.296745,9.7,8.4,9.0,9.4,9.0,10.7,7.2,6.3,17.1,10.3,5.333333,8.3],"居民":[10.5,15.8,5.9,5.5,5.2,5.9,23.7,27.8,8.1,2.9,5.007949,-4.2,5.0,7.0,9.6,10.8,18.0,2.4,-2.6,23.9,9.8,-2.195307,2.7]}},
+  gen:     {labels:["2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30","2025-07-31","2025-08-31","2025-09-30","2025-10-31","2025-11-30","2025-12-31","2026-02-28"],series:{"火电":[9.7,0.5,1.3,-4.3,-7.4,-4.9,3.7,8.89,1.8,1.4,-2.6,-5.8,-2.3,-2.3,1.2,1.1,4.3,1.7,-5.4,7.3,-4.2,-3.2,3.2675],"水电":[0.8,3.1,21.0,38.6,44.5,36.2,10.7,-14.59,-14.9,-1.9,5.5,4.5,9.5,-6.5,-14.3,-4.0,-9.8,-10.1,31.9,28.2,17.1,4.1,6.7636],"风电":[5.8,16.8,-8.4,-3.3,12.7,0.9,6.6,31.6,34.0,-3.3,6.6,10.4,8.2,12.7,11.0,3.2,5.5,20.2,-7.6,-11.9,22.0,8.9,5.3],"太阳能":[15.4,15.8,21.4,29.1,18.1,16.4,21.7,12.7,12.6,10.3,28.5,27.4,8.9,16.7,7.3,18.3,28.7,15.9,21.1,5.9,23.4,18.2,9.9]}},
+  ep:      {labels:["2023-01-01","2023-02-01","2023-03-01","2023-04-01","2023-05-01","2023-06-01","2023-07-01","2023-08-01","2023-09-01","2023-10-01","2023-11-01","2023-12-01","2024-01-01","2024-02-01","2024-03-01","2024-04-01","2024-05-01","2024-06-01","2024-07-01","2024-08-01","2024-09-01","2024-10-01","2024-11-01","2024-12-01","2025-01-01","2025-02-01","2025-03-01","2025-04-01","2025-05-01","2025-06-01","2025-07-01","2025-08-01","2025-09-01","2025-10-01","2025-11-01","2025-12-01","2026-01-01","2026-02-01","2026-03-01","2026-04-01"],series:{"广东":[531.5,525.6,538.41,548.31,525.86,517.07,500.62,472.82,481.92,479.19,498.65,485.07,432.83,458.05,427.77,426.95,406.34,402.81,402.22,405.86,398.95,399.12,401.21,372.94,373.32,377.51,377.75,372.44,372.7,372.39,372.58,372.51,372.36,372.41,372.54,372.84,372.48,372.48,372.45,372.45],"江苏":[469.0,468.9,468.7,469.2,469.2,468.95,459.85,465.0,465.0,454.5,451.5,469.2,440.0,445.0,445.0,446.0,435.0,410.0,422.95,427.0,427.0,422.0,412.0,421.0,405.25,411.0,399.0,395.0,401.5,312.8,395.6,393.8,319.48,340.77,355.95,399.58,324.71,312.8,317.62,323.72],"山东":[373.2,376.8,374.95,372.21,372.18,373.08,373.76,375.09,370.17,374.64,351.32,365.1,369.12,368.7,358.45,352.73,361.75,371.98,371.73,374.77,371.16,362.82,353.67,368.79,371.4,372.02,371.82,371.83,371.75,371.78,367.78,362.64,355.41,367.03,366.59,365.65,324.04,304.83,299.24,null],"安徽":[460.42,460.45,459.94,460.58,460.2,460.24,460.42,460.01,459.85,459.53,459.88,460.7,436.35,436.53,433.93,433.94,429.35,430.86,436.53,436.84,444.4,436.11,436.42,433.34,406.34,402.55,405.39,406.69,406.88,408.38,410.12,409.58,406.47,409.42,405.22,401.53,374.13,null,null,null],"广西":[492.09,492.28,492.82,493.18,493.57,493.84,494.01,494.01,493.9,493.9,494.03,494.3,448.31,448.24,449.49,449.02,448.88,443.94,444.87,434.31,443.65,419.94,388.17,402.72,340.76,337.68,337.77,337.59,336.36,325.82,235.83,220.87,219.76,212.23,207.35,274.27,325.98,215.11,null,null]}},
+  prx:     {labels:["2023-01-01","2023-02-01","2023-03-01","2023-04-01","2023-05-01","2023-06-01","2023-07-01","2023-08-01","2023-09-01","2023-10-01","2023-11-01","2023-12-01","2024-01-01","2024-02-01","2024-03-01","2024-04-01","2024-05-01","2024-06-01","2024-07-01","2024-08-01","2024-09-01","2024-10-01","2024-11-01","2024-12-01","2025-01-01","2025-02-01","2025-03-01","2025-04-01","2025-05-01","2025-06-01","2025-07-01","2025-08-01","2025-09-01","2025-10-01","2025-11-01","2025-12-01","2026-01-01","2026-02-01","2026-03-01","2026-04-01"],series:{"代理购电均价":[0.441184,0.446666,0.428309,0.424118,0.417341,0.404238,0.410573,0.415149,0.406279,0.409548,0.413171,0.42346,0.407432,0.411596,0.402157,0.400539,0.395255,0.386613,0.3888,0.389263,0.389833,0.387388,0.395529,0.402331,0.397832,0.39145,0.393531,0.384566,0.380361,0.372989,0.37187,0.375927,0.373603,0.38042,0.386812,0.388186,0.353912,0.346522,0.339745,0.336469]}},
+  gas:     {labels:["2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30","2025-07-31","2025-08-31","2025-09-30","2025-10-31","2025-11-30","2025-12-31","2026-03-31"],series:{"天然气消费同比":[14.027363,5.488345,11.544511,6.399522,5.781058,8.187135,8.69033,14.420804,10.714286,-0.343053,0.504648,-3.544339,0.111888,-2.058658,2.360877,1.889535,2.901849,2.505631,-2.0366,-1.612903,4.073437,1.929175,-34.420804],"LNG进口同比":[15.2,25.1,31.5,3.4,-4.6,1.1,5.1,21.7,28.0,-8.7,-13.9,-22.9,-24.5,-24.8,-25.6,-4.5,-6.7,-2.1,-14.7,-10.3,13.6,19.9,null]}},
+  cld:{labels:["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05", "2024-01-08", "2024-01-09", "2024-01-10", "2024-01-11", "2024-01-12", "2024-01-15", "2024-01-16", "2024-01-17", "2024-01-18", "2024-01-19", "2024-01-22", "2024-01-23", "2024-01-24", "2024-01-25", "2024-01-26", "2024-01-29", "2024-01-30", "2024-01-31", "2024-02-01", "2024-02-02", "2024-02-05", "2024-02-06", "2024-02-07", "2024-02-08", "2024-02-09", "2024-02-13", "2024-02-14", "2024-02-15", "2024-02-16", "2024-02-19", "2024-02-20", "2024-02-21", "2024-02-22", "2024-02-23", "2024-02-26", "2024-02-27", "2024-02-28", "2024-02-29", "2024-03-01", "2024-03-04", "2024-03-05", "2024-03-06", "2024-03-07", "2024-03-08", "2024-03-11", "2024-03-12", "2024-03-13", "2024-03-14", "2024-03-15", "2024-03-18", "2024-03-19", "2024-03-20", "2024-03-21", "2024-03-22", "2024-03-25", "2024-03-26", "2024-03-27", "2024-03-28", "2024-04-01", "2024-04-02", "2024-04-03", "2024-04-04", "2024-04-05", "2024-04-08", "2024-04-09", "2024-04-11", "2024-04-12", "2024-04-15", "2024-04-16", "2024-04-17", "2024-04-18", "2024-04-19", "2024-04-22", "2024-04-23", "2024-04-24", "2024-04-25", "2024-04-26", "2024-04-29", "2024-04-30", "2024-05-02", "2024-05-03", "2024-05-06", "2024-05-07", "2024-05-08", "2024-05-09", "2024-05-10", "2024-05-13", "2024-05-14", "2024-05-15", "2024-05-16", "2024-05-17", "2024-05-20", "2024-05-21", "2024-05-23", "2024-05-24", "2024-05-27", "2024-05-28", "2024-05-29", "2024-05-30", "2024-05-31", "2024-06-03", "2024-06-04", "2024-06-05", "2024-06-06", "2024-06-07", "2024-06-10", "2024-06-11", "2024-06-12", "2024-06-13", "2024-06-14", "2024-06-18", "2024-06-19", "2024-06-20", "2024-06-21", "2024-06-24", "2024-06-25", "2024-06-26", "2024-06-27", "2024-06-28", "2024-07-01", "2024-07-02", "2024-07-03", "2024-07-04", "2024-07-05", "2024-07-08", "2024-07-09", "2024-07-10", "2024-07-11", "2024-07-12", "2024-07-15", "2024-07-16", "2024-07-17", "2024-07-18", "2024-07-19", "2024-07-22", "2024-07-23", "2024-07-24", "2024-07-25", "2024-07-26", "2024-07-29", "2024-07-30", "2024-07-31", "2024-08-01", "2024-08-02", "2024-08-05", "2024-08-06", "2024-08-07", "2024-08-08", "2024-08-12", "2024-08-13", "2024-08-14", "2024-08-15", "2024-08-16", "2024-08-19", "2024-08-20", "2024-08-21", "2024-08-22", "2024-08-23", "2024-08-26", "2024-08-27", "2024-08-28", "2024-08-29", "2024-08-30", "2024-09-02", "2024-09-03", "2024-09-04", "2024-09-05", "2024-09-06", "2024-09-09", "2024-09-10", "2024-09-11", "2024-09-12", "2024-09-13", "2024-09-16", "2024-09-17", "2024-09-18", "2024-09-19", "2024-09-20", "2024-09-23", "2024-09-24", "2024-09-25", "2024-09-26", "2024-09-27", "2024-09-30", "2024-10-01", "2024-10-02", "2024-10-03", "2024-10-04", "2024-10-07", "2024-10-08", "2024-10-09", "2024-10-10", "2024-10-11", "2024-10-14", "2024-10-15", "2024-10-16", "2024-10-17", "2024-10-18", "2024-10-21", "2024-10-22", "2024-10-23", "2024-10-24", "2024-10-25", "2024-10-28", "2024-10-29", "2024-10-30", "2024-11-01", "2024-11-04", "2024-11-05", "2024-11-06", "2024-11-07", "2024-11-08", "2024-11-11", "2024-11-12", "2024-11-13", "2024-11-14", "2024-11-15", "2024-11-18", "2024-11-19", "2024-11-20", "2024-11-21", "2024-11-22", "2024-11-25", "2024-11-26", "2024-11-27", "2024-11-28", "2024-11-29", "2024-12-02", "2024-12-03", "2024-12-04", "2024-12-05", "2024-12-06", "2024-12-09", "2024-12-10", "2024-12-11", "2024-12-12", "2024-12-13", "2024-12-16", "2024-12-17", "2024-12-18", "2024-12-19", "2024-12-20", "2024-12-23", "2024-12-24", "2024-12-26", "2024-12-27", "2024-12-30", "2024-12-31", "2025-01-02", "2025-01-03", "2025-01-06", "2025-01-07", "2025-01-08", "2025-01-09", "2025-01-10", "2025-01-13", "2025-01-14", "2025-01-15", "2025-01-16", "2025-01-17", "2025-01-20", "2025-01-21", "2025-01-22", "2025-01-23", "2025-01-24", "2025-01-27", "2025-01-28", "2025-01-31", "2025-02-03", "2025-02-04", "2025-02-05", "2025-02-06", "2025-02-07", "2025-02-10", "2025-02-11", "2025-02-12", "2025-02-13", "2025-02-14", "2025-02-17", "2025-02-18", "2025-02-19", "2025-02-20", "2025-02-21", "2025-02-24", "2025-02-25", "2025-02-26", "2025-02-27", "2025-02-28", "2025-03-03", "2025-03-04", "2025-03-05", "2025-03-06", "2025-03-07", "2025-03-10", "2025-03-11", "2025-03-12", "2025-03-13", "2025-03-14", "2025-03-17", "2025-03-18", "2025-03-19", "2025-03-20", "2025-03-21", "2025-03-24", "2025-03-25", "2025-03-26", "2025-03-27", "2025-03-28", "2025-04-01", "2025-04-02", "2025-04-03", "2025-04-04", "2025-04-07", "2025-04-08", "2025-04-09", "2025-04-10", "2025-04-11", "2025-04-14", "2025-04-15", "2025-04-16", "2025-04-17", "2025-04-21", "2025-04-22", "2025-04-23", "2025-04-24", "2025-04-25", "2025-04-28", "2025-04-29", "2025-04-30", "2025-05-02", "2025-05-05", "2025-05-06", "2025-05-07", "2025-05-08", "2025-05-09", "2025-05-13", "2025-05-14", "2025-05-15", "2025-05-16", "2025-05-19", "2025-05-20", "2025-05-21", "2025-05-22", "2025-05-23", "2025-05-26", "2025-05-27", "2025-05-28", "2025-05-29", "2025-05-30", "2025-06-02", "2025-06-03", "2025-06-04", "2025-06-05", "2025-06-06", "2025-06-09", "2025-06-10", "2025-06-11", "2025-06-12", "2025-06-13", "2025-06-16", "2025-06-17", "2025-06-18", "2025-06-19", "2025-06-20", "2025-06-23", "2025-06-24", "2025-06-25", "2025-06-26", "2025-06-27", "2025-06-30", "2025-07-01", "2025-07-02", "2025-07-03", "2025-07-04", "2025-07-07", "2025-07-08", "2025-07-09", "2025-07-10", "2025-07-11", "2025-07-14", "2025-07-15", "2025-07-16", "2025-07-17", "2025-07-18", "2025-07-21", "2025-07-22", "2025-07-23", "2025-07-24", "2025-07-25", "2025-07-28", "2025-07-29", "2025-07-30", "2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-23", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-01", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-27", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-16", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14"],series:{"LNG到岸价":[11.0752, 10.7071, 11.2002, 11.0441, 10.7452, 9.8051, 10.1332, 10.1291, 10.3142, 10.3441, 9.8002, 9.7031, 9.4392, 9.5451, 9.2022, 9.2641, 9.2942, 9.5401, 8.9052, 9.3451, 9.1522, 9.8561, 9.7122, 9.5201, 9.5682, 9.4551, 9.3522, 9.4541, 9.1592, 8.8591, 8.5092, 8.9211, 8.6942, 8.4941, 8.2152, 8.2041, 8.1992, 7.9791, 7.9772, 8.1401, 8.2552, 8.2141, 8.3232, 8.2721, 8.9592, 8.9781, 8.6492, 9.1541, 8.7982, 8.5491, 8.7102, 8.7881, 9.1382, 9.9411, 9.9772, 9.6081, 9.4322, 9.1761, 9.8272, 9.6641, 9.5192, 9.5051, 9.4902, 9.3791, 9.3612, 9.4421, 9.4552, 9.5781, 9.8222, 10.0771, 10.3132, 10.4031, 11.1552, 10.9101, 10.4002, 10.6871, 10.3282, 10.2811, 10.1562, 10.0931, 10.1492, 9.9671, 9.9882, 10.4812, 10.4221, 10.8082, 10.6371, 10.3432, 10.4951, 10.8102, 10.4371, 10.3772, 10.8371, 10.9752, 11.1681, 11.4942, 11.4811, 12.3162, 12.0751, 11.9672, 11.9691, 12.0572, 12.1841, 12.4052, 12.8561, 12.6012, 12.1211, 12.0642, 11.8801, 11.7612, 12.5131, 12.6402, 13.3641, 12.9382, 12.5051, 12.6212, 12.8681, 12.7002, 12.4761, 12.7562, 12.9711, 12.7732, 12.5051, 12.6602, 12.2001, 11.9992, 11.9181, 12.0682, 12.1201, 11.7202, 11.6691, 11.7912, 11.9221, 12.1022, 12.1611, 12.3212, 12.1141, 12.1262, 11.9411, 12.0082, 12.0761, 12.1392, 12.3021, 12.7982, 12.5921, 12.8112, 12.8451, 12.9112, 12.7681, 12.8452, 12.7881, 13.5932, 14.1862, 13.6101, 14.0902, 14.0101, 14.3522, 14.3621, 14.3612, 13.9061, 13.7562, 13.4391, 13.4982, 13.9681, 14.2512, 14.0401, 14.2162, 13.9921, 13.5892, 13.1561, 13.0212, 13.4611, 13.1162, 13.4641, 12.9052, 12.8441, 13.3752, 13.2111, 13.0432, 13.3041, 13.5132, 12.9081, 13.0162, 12.8681, 12.9872, 13.1781, 13.3312, 13.2431, 12.7752, 12.9511, 12.7302, 13.2251, 13.2212, 12.9741, 12.7262, 12.9951, 13.4202, 13.4691, 13.2192, 13.5471, 13.3842, 13.2671, 13.3972, 13.4121, 13.6942, 13.8711, 14.1572, 13.9761, 14.0452, 13.9031, 12.8711, 13.0732, 13.3051, 12.9242, 13.2651, 13.8852, 13.8141, 13.7522, 13.5031, 13.8172, 13.7971, 14.2192, 14.7771, 14.6882, 15.3441, 15.5872, 15.3321, 15.2982, 15.1981, 15.1972, 14.8861, 15.4202, 15.3221, 15.0262, 14.9791, 14.9022, 14.8051, 14.4282, 14.4541, 14.0162, 13.5741, 12.8292, 12.9721, 13.4012, 13.1311, 13.9312, 13.9581, 14.4162, 14.4641, 14.6092, 14.8081, 14.8692, 15.3431, 15.1152, 14.9981, 14.5042, 14.3551, 13.5162, 13.2711, 14.0412, 14.1901, 13.8892, 13.3751, 13.6132, 13.6951, 14.3142, 14.7751, 14.0612, 13.9451, 14.1122, 13.8711, 14.8531, 14.9092, 15.0961, 15.1762, 15.7651, 16.3202, 17.1191, 16.9252, 16.4931, 15.5392, 14.9401, 14.9832, 14.2611, 14.7332, 13.9001, 14.3572, 14.0391, 14.1272, 13.4291, 13.3582, 13.9131, 13.7962, 12.9051, 13.2012, 12.9701, 12.2982, 12.9301, 13.4712, 13.4331, 13.4542, 13.2431, 13.2862, 13.1961, 13.5532, 13.8301, 13.8412, 13.1621, 13.1102, 12.8791, 12.8252, 12.8151, 12.6142, 12.8931, 12.6912, 12.2431, 11.2612, 11.4661, 11.1392, 11.1171, 11.0052, 11.2051, 11.4852, 11.6471, 12.1952, 12.2751, 12.0852, 11.5991, 11.1762, 11.1251, 10.7562, 10.6101, 10.7522, 11.1181, 11.0022, 11.4231, 11.5772, 11.7381, 11.9332, 11.7421, 11.9042, 11.7271, 11.8862, 11.9531, 12.3462, 12.8591, 12.6802, 12.5411, 12.7642, 12.6261, 12.5742, 12.4541, 12.0571, 12.0572, 12.2461, 12.4982, 12.5441, 12.7492, 12.6871, 12.2982, 12.5201, 12.7542, 13.4401, 13.8972, 13.9441, 14.4002, 14.2541, 14.6882, 14.8111, 13.2072, 13.1461, 12.8532, 12.3421, 12.0602, 12.1251, 12.5232, 12.4651, 12.4982, 12.3511, 12.6152, 12.7211, 12.9382, 12.7541, 12.9932, 12.6381, 12.3952, 12.3551, 12.2362, 12.1431, 12.0462, 12.0771, 11.6712, 11.5571, 11.6222, 11.8951, 12.1282, 12.1371, 12.1732, 11.8631, 11.8462, 11.9652, 11.8092, 11.7741, 11.7642, 11.7311, 11.6742, 11.4051, 11.1912, 10.9241, 11.0102, 10.9501, 11.3722, 11.6741, 12.5411, 11.7092, 11.6311, 11.4972, 10.9971, 11.0082, 11.2311, 11.4032, 11.2141, 11.4552, 11.4711, 11.4922, 11.7461, 11.5342, 11.5661, 11.3222, 11.2591, 11.3162, 11.6541, 11.5762, 11.3821, 11.3162, 11.2261, 11.1542, 11.2001, 11.1392, 11.0281, 10.7852, 10.4181, 10.4892, 10.5871, 11.0192, 11.2471, 11.0962, 10.8351, 10.7302, 10.7401, 10.6142, 10.6701, 11.1192, 11.3391, 10.9791, 11.2282, 11.3921, 11.2312, 11.0971, 10.9882, 11.1041, 11.1952, 11.0531, 11.1122, 11.1581, 11.2262, 11.0121, 11.0842, 11.1131, 11.0152, 11.1741, 11.0002, 10.9421, 11.4762, 11.5231, 11.4852, 11.6691, 11.4422, 11.0841, 10.8842, 10.7581, 10.7272, 10.9361, 10.7792, 10.6571, 10.5922, 10.4751, 10.2282, 10.4831, 10.1732, 9.7451, 9.4482, 9.5371, 9.6572, 9.3811, 9.4252, 9.4741, 9.5232, 9.5461, 9.6542, 9.7861, 9.6202, 9.6411, 9.7022, 9.5521, 9.8491, 9.3822, 9.4431, 9.7322, 9.2701, 9.3812, 9.7211, 10.1272, 9.5411, 9.9522, 10.3291, 10.1712, 10.9391, 10.6042, 11.6081, 11.3182, 11.7931, 11.7052, 11.6691, 11.9072, 12.0951, 10.9202, 10.5231, 10.5262, 10.7001, 10.7372, 10.4971, 10.7771, 10.5622, 10.6531, 10.7202, 10.4561, 10.7232, 11.1331, 10.6952, 10.7001, 10.4622, 10.4171, 10.6922, 15.0631, 25.3882, 23.7821, 22.0182, 20.0321, 24.7912, 19.0651, 17.9782, 18.9221, 18.9172, 19.7841, 20.1532, 19.1321, 25.4072, 22.7271, 22.9552, 20.6781, 18.0172, 19.6701, 20.5072, 20.3331, 19.3442, 17.7282, 17.8541, 18.3012, 17.9741, 16.3362, 17.4031, 16.8832, 18.0701, 17.1052]}},
+  avp:     {labels:["01-07","01-08","01-09","01-10","01-11","01-12","01-13","01-14","01-15","01-16","01-17","01-18","01-19","01-20","01-21","01-22","01-23","01-24","01-25","01-26","01-27","01-28","01-29","01-30","01-31","02-01","02-02","02-03","02-04","02-05","02-06","02-07","02-08","02-09","02-10","02-11","02-12","02-13","02-14","02-15","02-16","02-17","02-18","02-19","02-20","02-21","02-22","02-23","02-24","02-25","02-26","02-27","02-28","03-01","03-02","03-03","03-04","03-05","03-06","03-07","03-08","03-09","03-10","03-11","03-12","03-13","03-14","03-15","03-16","03-17","03-18","03-19","03-20","03-21","03-22","03-23","03-24","03-25","03-26","03-27","03-28","03-29","03-30","03-31","04-01","04-02","04-03","04-04","04-05","04-06","04-07","04-08","04-09","04-10","04-11","04-12","04-13","04-14","04-15","04-16","04-17","04-18","04-19","04-20","04-21","04-22","04-23","04-24","04-25","04-26","04-27","04-28","04-29","04-30","05-01","05-02","05-03","05-04","05-05","05-06","05-07","05-08","05-09","05-10","05-11","05-12","05-13","05-14","05-15","05-16","05-17","05-18","05-19","05-20","05-21","05-22","05-23","05-24","05-25","05-26","05-27","05-28","05-29","05-30","05-31","06-01","06-02","06-03","06-04","06-05","06-06","06-07","06-08","06-09","06-10","06-11","06-12","06-13","06-14","06-15","06-16","06-17","06-18","06-19","06-20","06-21","06-22","06-23","06-24","06-25","06-26","06-27","06-28","06-29","06-30","07-01","07-02","07-03","07-04","07-05","07-06","07-07","07-08","07-09","07-10","07-11","07-12","07-13","07-14","07-15","07-16","07-17","07-18","07-19","07-20","07-21","07-22","07-23","07-24","07-25","07-26","07-27","07-28","07-29","07-30","07-31","08-01","08-02","08-03","08-04","08-05","08-06","08-07","08-08","08-09","08-10","08-11","08-12","08-13","08-14","08-15","08-16","08-17","08-18","08-19","08-20","08-21","08-22","08-23","08-24","08-25","08-26","08-27","08-28","08-29","08-30","08-31","09-01","09-02","09-03","09-04","09-05","09-06","09-07","09-08","09-09","09-10","09-11","09-12","09-13","09-14","09-15","09-16","09-17","09-18","09-19","09-20","09-21","09-22","09-23","09-24","09-25","09-26","09-27","09-28","09-29","09-30","10-01","10-02","10-03","10-04","10-05","10-06","10-07","10-08","10-09","10-10","10-11","10-12","10-13","10-14","10-15","10-16","10-17","10-18","10-19","10-20","10-21","10-22","10-23","10-24","10-25","10-26","10-27","10-28","10-29","10-30","10-31","11-01","11-02","11-03","11-04","11-05","11-06","11-07","11-08","11-09","11-10","11-11","11-12","11-13","11-14","11-15","11-16","11-17","11-18","11-19","11-20","11-21","11-22","11-23","11-24","11-25","11-26","11-27","11-28","11-29","11-30","12-01","12-02","12-03","12-04","12-05","12-06","12-07","12-08","12-09","12-10","12-11","12-12","12-13","12-14","12-15","12-16","12-17","12-18","12-19","12-20","12-21","12-22","12-23","12-24","12-25","12-26","12-27","12-28","12-29","12-30","12-31"],series:{"2026":[691.142857,683.857143,685.714286,659.285714,651.285714,652.142857,656.0,663.142857,672.857143,684.285714,692.714286,700.714286,706.285714,712.285714,716.714286,719.0,721.285714,726.571429,732.285714,738.571429,745.142857,755.142857,767.428571,782.285714,801.428571,819.857143,836.285714,851.428571,864.571429,878.714286,892.285714,909.714286,925.428571,945.428571,971.142857,1000.285714,1030.428571,1056.428571,1077.0,1086.285714,1065.142857,1041.142857,1023.857143,1007.142857,996.142857,1005.714286,1046.0,1121.571429,1176.714286,1206.714286,1220.571429,1215.285714,1185.285714,1126.142857,1046.428571,974.714286,917.714286,864.142857,820.0,773.857143,736.428571,713.142857,698.285714,681.285714,671.285714,667.285714,662.142857,664.0,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"2025":[683.0,701.714286,728.142857,749.714286,763.428571,778.142857,791.571429,805.0,817.285714,829.428571,849.285714,869.285714,893.714286,920.285714,946.714286,977.142857,1010.857143,1046.428571,1071.428571,1086.857143,1071.428571,1039.0,1008.714286,974.428571,943.142857,941.142857,971.0,1035.714286,1090.142857,1121.285714,1135.428571,1133.714286,1109.857143,1053.285714,983.428571,926.142857,887.714286,856.142857,829.285714,804.428571,782.857143,766.142857,758.142857,746.142857,740.857143,733.857143,729.857143,725.0,720.285714,714.571429,708.857143,706.857143,701.428571,694.571429,690.285714,684.857143,679.142857,672.0,662.142857,651.0,644.571429,641.428571,639.857143,641.285714,644.571429,650.285714,656.428571,664.0,669.142857,674.428571,681.142857,689.571429,698.571429,704.857143,712.142857,718.857143,724.571429,728.571429,733.571429,740.571429,747.857143,747.0,743.0,738.714286,732.571429,738.857143,714.571429,697.0,711.428571,718.142857,718.142857,716.857143,701.857143,718.285714,730.142857,719.857143,721.571429,729.428571,741.142857,754.285714,768.428571,779.285714,788.714286,795.571429,799.571429,799.285714,796.0,790.571429,792.857143,785.285714,783.142857,799.571429,854.857143,892.714286,877.0,859.857143,879.0,931.857143,927.142857,866.285714,817.285714,813.428571,809.285714,776.857143,709.857143,684.571429,679.285714,682.142857,695.0,702.714286,712.857143,717.428571,721.285714,723.285714,724.0,724.857143,724.857143,720.857143,716.142857,711.142857,708.428571,708.142857,718.285714,713.857143,692.0,704.142857,709.142857,706.571429,701.0,678.285714,676.142857,694.857143,686.857143,690.714286,701.285714,712.571429,729.857143,745.285714,757.571429,766.857143,772.0,777.142857,782.285714,788.428571,793.428571,797.571429,800.142857,804.428571,810.285714,816.571429,821.857143,831.571429,839.285714,847.571429,855.285714,859.428571,862.285714,863.571429,870.428571,876.285714,880.857143,885.714286,892.857143,902.285714,910.571429,917.0,923.857143,928.285714,932.0,932.714286,929.142857,927.857143,927.0,927.571429,926.714286,922.0,917.857143,915.142857,913.0,911.285714,906.857143,902.857143,901.571429,904.571429,912.285714,920.285714,929.571429,937.428571,944.142857,952.285714,957.571429,958.571429,960.142857,964.142857,969.857143,972.857143,971.571429,968.714286,965.714286,962.285714,955.0,946.571429,939.571429,933.857143,929.285714,922.571429,911.857143,898.714286,888.714286,880.857143,873.571429,864.428571,856.0,844.0,830.142857,810.571429,788.857143,768.285714,749.142857,733.428571,719.285714,704.857143,700.714286,703.142857,705.142857,709.0,710.285714,717.142857,721.285714,723.428571,724.714286,725.857143,726.714286,730.0,734.571429,737.428571,740.857143,741.857143,746.0,744.428571,745.285714,742.428571,749.857143,747.714286,763.0,817.285714,881.571429,904.714286,897.285714,882.714286,880.714286,887.428571,889.0,884.857143,870.285714,860.857143,852.0,836.142857,801.857143,734.142857,670.285714,655.428571,669.428571,677.571429,691.571429,701.285714,705.428571,706.0,705.571429,705.714286,707.285714,707.428571,704.571429,703.142857,700.714286,698.714286,693.142857,685.857143,677.428571,669.285714,663.714286,660.142857,655.428571,652.428571,650.428571,650.285714,652.428571,657.857143,665.571429,670.142857,675.428571,684.285714,694.857143,698.857143,698.0,694.428571,693.142857,691.0,683.714286,675.0,671.285714,669.571429,667.428571,665.857143,664.857143,664.142857,662.428571,660.857143,658.142857,655.571429,653.428571,651.0,650.571429,649.857143,650.285714,650.142857,650.285714,649.142857,643.714286,639.142857,632.857143,629.0,628.571429,628.857143,632.0,638.285714,645.142857,651.142857,656.0,660.142857,663.857143,666.428571,668.428571,675.571429,680.857143,683.0,692.428571,717.714286,726.0],"2019":[670.428571,681.428571,695.428571,706.142857,717.285714,727.428571,740.571429,753.0,764.0,776.714286,792.0,805.714286,816.428571,822.571429,827.714286,832.714286,839.285714,850.857143,858.285714,869.428571,881.285714,894.285714,908.571429,918.285714,926.571429,927.428571,910.571429,886.142857,867.571429,852.571429,849.142857,866.285714,903.142857,952.714286,1005.285714,1041.714286,1063.0,1065.142857,1041.571429,1003.285714,963.428571,922.285714,898.285714,878.0,863.571429,850.428571,838.428571,827.142857,818.285714,798.0,781.142857,765.0,746.142857,730.142857,717.714286,708.0,699.714286,691.571429,685.428571,679.428571,677.285714,676.571429,677.142857,679.0,682.571429,690.0,696.428571,703.857143,712.428571,721.428571,733.142857,743.857143,752.714286,758.857143,764.428571,768.428571,771.428571,770.857143,771.142857,769.285714,769.571429,765.0,756.714286,746.285714,737.285714,739.0,714.571429,695.714286,705.285714,714.142857,719.428571,724.142857,717.0,739.285714,755.857143,752.285714,752.714286,757.571429,762.571429,769.142857,776.0,782.714286,786.571429,789.714286,791.571429,792.285714,794.0,794.714286,803.571429,805.428571,811.571429,842.428571,851.285714,827.857143,808.857143,827.285714,828.571429,816.142857,775.428571,755.142857,763.714286,767.142857,724.714286,708.0,703.285714,702.428571,706.428571,711.0,718.571429,725.0,732.571429,736.142857,738.428571,737.714286,737.714286,734.857143,732.285714,729.571429,725.857143,722.571429,718.142857,711.857143,705.857143,698.857143,687.285714,678.571429,673.285714,672.571429,687.142857,676.285714,670.285714,687.428571,701.714286,709.428571,712.428571,702.142857,717.285714,731.714286,727.428571,725.142857,727.857143,733.142857,740.0,747.142857,751.285714,754.428571,756.714286,759.571429,763.0,766.285714,772.285714,783.428571,792.142857,800.285714,807.285714,814.285714,820.285714,825.571429,832.142857,839.0,847.0,856.428571,867.0,877.428571,887.428571,896.571429,904.142857,911.428571,916.428571,916.0,914.857143,913.0,911.428571,911.0,908.285714,905.142857,905.285714,905.714286,908.142857,910.428571,911.0,912.142857,915.571429,920.285714,925.0,928.428571,933.857143,939.142857,945.285714,950.0,951.285714,954.428571,962.142857,974.714286,989.428571,1000.142857,1006.285714,1009.142857,1009.0,1006.714286,998.0,988.428571,980.428571,977.0,976.428571,976.285714,971.714286,965.857143,958.571429,950.857143,939.714286,927.857143,913.857143,896.142857,875.0,849.571429,824.857143,802.285714,780.714286,760.857143,745.285714,731.0,721.571429,712.428571,705.0,698.714286,703.857143,680.285714,662.714286,662.428571,667.0,668.285714,671.571429,664.428571,687.714286,702.857143,705.714286,704.857143,706.428571,708.428571,712.142857,719.0,738.857143,751.714286,797.285714,840.571429,854.285714,848.428571,832.428571,831.857143,855.714286,860.285714,836.428571,825.285714,826.142857,824.571429,801.0,758.0,708.285714,692.142857,691.857143,698.142857,715.285714,724.714286,734.571429,738.142857,737.142857,734.714286,730.428571,725.285714,720.142857,713.714286,706.857143,700.857143,694.285714,689.285714,682.714286,675.571429,669.714286,667.571429,667.857143,668.285714,668.714286,669.428571,670.0,671.428571,669.571429,667.714286,667.428571,668.0,670.0,672.0,675.428571,678.571429,680.571429,683.571429,684.428571,683.285714,681.714286,678.142857,676.142857,674.428571,671.142857,668.428571,665.428571,664.0,661.285714,658.857143,655.857143,653.142857,650.285714,647.142857,642.428571,639.571429,637.285714,637.0,637.142857,637.0,637.285714,639.142857,640.857143,642.714286,643.857143,644.714286,645.571429,647.714286,648.428571,645.857143,644.0,642.0,640.0,641.0,640.571429,645.857143,647.571429,648.285714,651.142857,654.833333,654.4],"同比":[0.011922,-0.025448,-0.05827,-0.120617,-0.146894,-0.161924,-0.171269,-0.17622,-0.176717,-0.174991,-0.184357,-0.193919,-0.209719,-0.226017,-0.242946,-0.264181,-0.286461,-0.305666,-0.316533,-0.320452,-0.304533,-0.273202,-0.239201,-0.197185,-0.150257,-0.128871,-0.138738,-0.177931,-0.206919,-0.216333,-0.214142,-0.197581,-0.166173,-0.102401,-0.012493,0.080056,0.160766,0.23394,0.298708,0.350382,0.360584,0.358941,0.35048,0.349799,0.344582,0.37045,0.433157,0.546995,0.633677,0.688725,0.721886,0.719281,0.689817,0.621349,0.515935,0.423237,0.351283,0.285927,0.238403,0.188721,0.142509,0.111804,0.091315,0.062375,0.041445,0.026142,0.008705,0.0,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]}},
+  lf:      {labels:["01-07","01-08","01-09","01-10","01-11","01-12","01-13","01-14","01-15","01-16","01-17","01-18","01-19","01-20","01-21","01-22","01-23","01-24","01-25","01-26","01-27","01-28","01-29","01-30","01-31","02-01","02-02","02-03","02-04","02-05","02-06","02-07","02-08","02-09","02-10","02-11","02-12","02-13","02-14","02-15","02-16","02-17","02-18","02-19","02-20","02-21","02-22","02-23","02-24","02-25","02-26","02-27","02-28","03-01","03-02","03-03","03-04","03-05","03-06","03-07","03-08","03-09","03-10","03-11","03-12","03-13","03-14","03-15","03-16","03-17","03-18","03-19","03-20","03-21","03-22","03-23","03-24","03-25","03-26","03-27","03-28","03-29","03-30","03-31","04-01","04-02","04-03","04-04","04-05","04-06","04-07","04-08","04-09","04-10","04-11","04-12","04-13","04-14","04-15","04-16","04-17","04-18","04-19","04-20","04-21","04-22","04-23","04-24","04-25","04-26","04-27","04-28","04-29","04-30","05-01","05-02","05-03","05-04","05-05","05-06","05-07","05-08","05-09","05-10","05-11","05-12","05-13","05-14","05-15","05-16","05-17","05-18","05-19","05-20","05-21","05-22","05-23","05-24","05-25","05-26","05-27","05-28","05-29","05-30","05-31","06-01","06-02","06-03","06-04","06-05","06-06","06-07","06-08","06-09","06-10","06-11","06-12","06-13","06-14","06-15","06-16","06-17","06-18","06-19","06-20","06-21","06-22","06-23","06-24","06-25","06-26","06-27","06-28","06-29","06-30","07-01","07-02","07-03","07-04","07-05","07-06","07-07","07-08","07-09","07-10","07-11","07-12","07-13","07-14","07-15","07-16","07-17","07-18","07-19","07-20","07-21","07-22","07-23","07-24","07-25","07-26","07-27","07-28","07-29","07-30","07-31","08-01","08-02","08-03","08-04","08-05","08-06","08-07","08-08","08-09","08-10","08-11","08-12","08-13","08-14","08-15","08-16","08-17","08-18","08-19","08-20","08-21","08-22","08-23","08-24","08-25","08-26","08-27","08-28","08-29","08-30","08-31","09-01","09-02","09-03","09-04","09-05","09-06","09-07","09-08","09-09","09-10","09-11","09-12","09-13","09-14","09-15","09-16","09-17","09-18","09-19","09-20","09-21","09-22","09-23","09-24","09-25","09-26","09-27","09-28","09-29","09-30","10-01","10-02","10-03","10-04","10-05","10-06","10-07","10-08","10-09","10-10","10-11","10-12","10-13","10-14","10-15","10-16","10-17","10-18","10-19","10-20","10-21","10-22","10-23","10-24","10-25","10-26","10-27","10-28","10-29","10-30","10-31","11-01","11-02","11-03","11-04","11-05","11-06","11-07","11-08","11-09","11-10","11-11","11-12","11-13","11-14","11-15","11-16","11-17","11-18","11-19","11-20","11-21","11-22","11-23","11-24","11-25","11-26","11-27","11-28","11-29","11-30","12-01","12-02","12-03","12-04","12-05","12-06","12-07","12-08","12-09","12-10","12-11","12-12","12-13","12-14","12-15","12-16","12-17","12-18","12-19","12-20","12-21","12-22","12-23","12-24","12-25","12-26","12-27","12-28","12-29","12-30","12-31"],series:{"2026":[0.833858,0.835421,0.83791,0.8363,0.831441,0.829331,0.82937,0.833166,0.836933,0.8406,0.843499,0.845333,0.845165,0.845148,0.843043,0.838825,0.835416,0.83283,0.832501,0.831994,0.832638,0.83523,0.838737,0.841369,0.844613,0.845008,0.843468,0.841143,0.837837,0.83582,0.833474,0.832205,0.831843,0.833606,0.837505,0.840679,0.842569,0.84324,0.844134,0.843372,0.839667,0.840608,0.84625,0.853421,0.862825,0.874229,0.889026,0.907856,0.918627,0.923546,0.924978,0.922749,0.918159,0.909949,0.895627,0.87867,0.872455,0.864407,0.860172,0.853177,0.84815,0.850011,0.854933,0.849246,0.848174,0.848102,0.847145,0.847679,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"2025":[0.808081,0.817465,0.826045,0.82818,0.825651,0.822248,0.818345,0.815416,0.814137,0.813296,0.81678,0.819924,0.823588,0.827956,0.830984,0.834956,0.839639,0.844628,0.846709,0.845579,0.838853,0.83488,0.835533,0.837681,0.840451,0.847655,0.859712,0.875719,0.885983,0.889415,0.888407,0.884665,0.880227,0.87218,0.861713,0.850487,0.847873,0.846078,0.844498,0.844112,0.845411,0.849216,0.856395,0.855743,0.857405,0.857806,0.856726,0.854596,0.852367,0.850236,0.848375,0.848317,0.845579,0.841127,0.837965,0.836121,0.833315,0.829818,0.825035,0.820875,0.820144,0.822388,0.823529,0.825282,0.827451,0.829717,0.833101,0.835807,0.836627,0.838012,0.840389,0.843048,0.844805,0.846002,0.8468,0.848068,0.848907,0.849193,0.850125,0.851149,0.851984,0.846789,0.839532,0.833215,0.827709,0.826391,0.818827,0.81519,0.821344,0.831101,0.837282,0.84076,0.839563,0.844553,0.845539,0.845347,0.844166,0.845324,0.848031,0.850327,0.853472,0.856597,0.858374,0.856517,0.855352,0.85242,0.849399,0.845582,0.845285,0.841698,0.840205,0.84133,0.845446,0.849627,0.850144,0.852145,0.855478,0.860163,0.863529,0.863606,0.861659,0.860406,0.856546,0.85427,0.852252,0.8483,0.846373,0.847975,0.853397,0.857067,0.859892,0.861175,0.861045,0.859732,0.856973,0.855044,0.853328,0.848308,0.843651,0.839871,0.838027,0.837739,0.838139,0.83471,0.83163,0.829627,0.833442,0.83496,0.834785,0.832278,0.835187,0.841912,0.848342,0.85063,0.852357,0.854228,0.855656,0.857165,0.857303,0.855981,0.854289,0.853707,0.853896,0.854161,0.852067,0.848583,0.845987,0.843707,0.843184,0.841887,0.842638,0.84566,0.848499,0.850573,0.84702,0.842368,0.83903,0.834664,0.832113,0.830727,0.828773,0.831389,0.835383,0.839227,0.841168,0.842076,0.842772,0.843414,0.84442,0.843171,0.840437,0.841091,0.844505,0.845911,0.846271,0.844408,0.843578,0.844889,0.846253,0.845983,0.847201,0.848988,0.852311,0.856991,0.862358,0.864338,0.865766,0.867873,0.870011,0.872904,0.874954,0.874101,0.875264,0.877611,0.88001,0.882004,0.882206,0.881532,0.881129,0.88223,0.88233,0.881471,0.881619,0.882376,0.884115,0.884524,0.883423,0.881698,0.88108,0.880505,0.880561,0.87778,0.875643,0.871555,0.866111,0.858884,0.85299,0.847136,0.844606,0.844473,0.845411,0.847073,0.855001,0.860338,0.865027,0.868391,0.86956,0.87251,0.874552,0.872964,0.873272,0.872923,0.872274,0.873068,0.873357,0.872721,0.870734,0.868777,0.866918,0.862054,0.858175,0.852839,0.848575,0.843599,0.841703,0.845554,0.854683,0.86108,0.866615,0.875671,0.884786,0.8905,0.891876,0.889121,0.887781,0.885433,0.87968,0.877018,0.875084,0.872534,0.87371,0.87514,0.880165,0.882903,0.884474,0.885151,0.883776,0.87979,0.876607,0.874942,0.874772,0.873972,0.871655,0.869619,0.868215,0.86569,0.862746,0.85828,0.854433,0.851401,0.849106,0.848155,0.84792,0.847562,0.848736,0.849918,0.852518,0.856509,0.859952,0.862188,0.863452,0.865535,0.867687,0.868152,0.866391,0.864545,0.862126,0.859684,0.855671,0.851726,0.848701,0.847615,0.846751,0.846394,0.84702,0.847406,0.847274,0.846402,0.844374,0.84229,0.841359,0.840007,0.839356,0.838401,0.83929,0.839869,0.839258,0.837039,0.833524,0.830064,0.826867,0.824962,0.825563,0.826352,0.829778,0.83375,0.838481,0.840993,0.843434,0.845116,0.845945,0.844904,0.843991,0.846129,0.848643,0.847835,0.850833,0.854981,0.856371],"2019":[0.794391,0.804188,0.815773,0.82332,0.827598,0.831033,0.834748,0.836199,0.836959,0.83893,0.841768,0.842769,0.839977,0.835523,0.833089,0.831366,0.831013,0.83332,0.832336,0.832684,0.831572,0.83126,0.831096,0.829218,0.826982,0.82582,0.824702,0.828326,0.833791,0.839017,0.845775,0.85516,0.869117,0.884907,0.895661,0.900563,0.903089,0.90281,0.898066,0.890515,0.88088,0.87373,0.875653,0.8766,0.880028,0.88338,0.886543,0.890406,0.89217,0.885582,0.882174,0.87738,0.869797,0.862213,0.855342,0.85039,0.846857,0.841716,0.838469,0.836348,0.837131,0.839534,0.84146,0.8437,0.846022,0.849996,0.852403,0.855081,0.857468,0.860581,0.86418,0.867282,0.8619,0.856775,0.850482,0.843727,0.83564,0.826671,0.818484,0.816006,0.815996,0.810862,0.801566,0.791884,0.784629,0.780476,0.769798,0.763128,0.766877,0.776715,0.790756,0.798395,0.801029,0.810908,0.815846,0.81862,0.819365,0.802435,0.805432,0.806828,0.809824,0.815624,0.817305,0.818176,0.829173,0.827083,0.829611,0.830872,0.833247,0.83398,0.834241,0.841264,0.842232,0.836764,0.830817,0.828696,0.826381,0.826314,0.818653,0.812236,0.809055,0.807507,0.798646,0.794786,0.791544,0.790976,0.795487,0.802256,0.800335,0.804178,0.807986,0.811018,0.812882,0.806194,0.798969,0.799192,0.793097,0.784349,0.776667,0.769492,0.765492,0.756393,0.753152,0.754182,0.756828,0.757264,0.756931,0.766476,0.786147,0.793747,0.799009,0.806402,0.815542,0.82719,0.828468,0.825335,0.827602,0.829738,0.828199,0.826124,0.824786,0.825455,0.826886,0.828487,0.827719,0.825309,0.818528,0.817996,0.818523,0.819222,0.821437,0.822105,0.822069,0.821969,0.818502,0.816879,0.813908,0.810075,0.813592,0.818174,0.82528,0.829689,0.832997,0.834771,0.834584,0.8322,0.830187,0.828207,0.825225,0.819499,0.817175,0.817201,0.817092,0.818144,0.818425,0.81862,0.820765,0.821568,0.824578,0.828035,0.829677,0.830928,0.835339,0.839573,0.841201,0.840082,0.841027,0.841646,0.844751,0.844695,0.843184,0.845782,0.846148,0.851256,0.858062,0.863415,0.864818,0.863566,0.860428,0.863658,0.860963,0.857605,0.855287,0.856475,0.861148,0.864927,0.864274,0.863194,0.862416,0.86087,0.858111,0.854564,0.850112,0.843964,0.834771,0.826724,0.819394,0.811787,0.807533,0.806084,0.807704,0.808368,0.808897,0.807635,0.807596,0.80462,0.803284,0.791331,0.785432,0.786188,0.791986,0.796032,0.798779,0.801358,0.814047,0.81992,0.821463,0.818749,0.819153,0.819873,0.820233,0.819412,0.821429,0.817288,0.818204,0.82114,0.824782,0.825204,0.825658,0.827362,0.831447,0.830023,0.82681,0.825881,0.824697,0.818852,0.815517,0.816109,0.8198,0.823412,0.82589,0.830176,0.840931,0.843602,0.844799,0.843694,0.839355,0.832098,0.827059,0.823723,0.822048,0.820349,0.816301,0.812354,0.810911,0.809562,0.805327,0.799884,0.795924,0.794386,0.795833,0.796654,0.796162,0.789768,0.792411,0.790189,0.78915,0.788109,0.788519,0.788484,0.796539,0.798157,0.803772,0.806976,0.80801,0.809773,0.809608,0.808709,0.806063,0.802625,0.800801,0.799306,0.798526,0.799196,0.799533,0.800688,0.799246,0.796014,0.793988,0.789323,0.787342,0.785847,0.782931,0.783623,0.787052,0.789367,0.793673,0.793772,0.79364,0.796359,0.799376,0.801572,0.80277,0.804333,0.80736,0.805407,0.804779,0.800277,0.797004,0.795934,0.793827,0.79341,0.797041,0.801174,0.803265,0.800666,0.798343,0.798021,0.794349]}},
+  kd:      {labels:["2024-01-31","2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31","2025-01-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30","2025-07-31","2025-08-31","2025-09-30","2025-10-31","2025-11-30","2025-12-31","2026-01-31","2026-02-28"],series:{"全国":[84.8,-15.6,20.1,22.7,23.8,17.7,22.2,19.5,18.7,24.0,14.9,22.3,1.3,58.8,20.3,19.1,17.2,15.8,15.1,12.3,12.7,7.9,5.0,2.3,23.4,-10.9],"圆通":[91.882248,-20.397691,22.453573,23.776626,27.597765,22.879464,26.508876,29.867892,28.017719,31.193634,17.421442,23.482726,5.439331,48.751007,22.472426,25.255814,21.015762,19.300636,20.813845,11.057054,13.624567,12.818439,13.577332,9.035917,29.761905,0.595883],"韵达":[96.092184,-22.88197,32.596685,31.752577,32.683561,27.956989,27.78131,21.565003,21.989215,31.810193,17.61658,18.923077,2.861523,69.953052,17.34375,13.406364,12.781587,7.414731,7.562189,8.717689,3.634578,-5.111111,-4.185022,-7.373868,10.829608,-26.132597],"申通":[124.565757,-15.378356,31.491294,29.126214,29.474385,29.021668,35.441279,27.284681,21.978022,30.351819,21.08768,31.772967,11.767956,63.365385,20.034542,20.994795,16.341213,11.145038,11.90354,10.89876,9.459459,3.979872,14.665445,11.056838,25.556105,-5.826957],"顺丰":[19.85371,-11.49033,0.0,6.095041,14.038657,8.947886,16.647792,14.615385,12.635735,26.919033,8.680851,19.469027,15.954664,17.737789,25.36302,29.990263,31.75736,31.768953,33.68932,34.803452,31.814198,26.263463,20.125294,9.333333,4.210526,17.030568]}},
+  kdp:     {labels:["2024-01-31","2024-02-29","2024-03-31","2024-04-30","2024-05-31","2024-06-30","2024-07-31","2024-08-31","2024-09-30","2024-10-31","2024-11-30","2024-12-31","2025-01-31","2025-02-28","2025-03-31","2025-04-30","2025-05-31","2025-06-30","2025-07-31","2025-08-31","2025-09-30","2025-10-31","2025-11-30","2025-12-31","2026-01-31","2026-02-28"],series:{"圆通":[2.45,2.53,2.36,2.3,2.23,2.25,2.24,2.17,2.18,2.31,2.29,2.29,2.35,2.32,2.18,2.14,2.12,2.1,2.08,2.15,2.21,2.23,2.24,2.25,2.25,2.4],"韵达":[2.27,2.29,2.08,2.05,2.03,2.0,1.98,1.99,2.01,2.02,2.03,2.03,2.02,1.95,1.96,1.91,1.92,1.91,1.91,1.92,2.02,2.11,2.16,2.15,2.15,2.25],"申通":[2.19,2.25,2.1,2.05,2.01,2.01,2.0,2.0,2.02,2.03,2.08,2.02,2.06,2.04,2.01,1.97,1.95,1.99,1.97,2.06,2.12,2.18,2.41,2.33,2.35,2.44],"顺丰":[17.0,16.28,15.66,15.67,15.25,15.77,15.76,15.67,16.0,14.64,14.72,14.55,15.61,14.35,13.82,13.49,13.12,13.67,13.55,13.27,13.87,13.18,13.47,13.81,14.72,15.32]}},
+  kdw:     {labels:["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52"],series:{"2024":[27.72,29.05,31.51,33.2,26.93,5.53,14.08,27.67,28.71,31.27,30.36,31.1,31.97,30.06,31.43,32.78,33.99,29.12,33.42,33.49,35.93,34.71,33.56,33.46,35.69,32.37,32.08,31.91,32.27,32.07,31.37,31.08,31.51,33.05,34.67,35.31,35.3,32.55,36.24,31.26,36.51,36.59,41.52,39.58,39.72,40.59,38.15,39.14,37.75,41.43,40.57,40.68],"2025":[39.47,43.55,46.19,28.24,5.77,34.72,36.23,37.57,37.36,38.85,37.48,36.82,38.24,34.42,38.13,39.5,40.75,null,38.71,40.67,41.47,38.88,39.0,39.3,40.83,37.55,37.42,36.98,36.73,36.63,35.96,35.25,35.23,37.01,38.55,38.56,38.3,38.87,40.41,32.67,36.26,39.44,45.63,42.81,42.2,44.19,41.26,40.06,39.79,41.32,40.6,40.49],"2026":[38.35,41.07,40.73,43.11,45.41,46.86,22.83,8.06,42.31,39.23,39.17,38.45,39.0,37.18,39.33,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]}},
+  col:     {labels:["2024-05-17","2024-05-24","2024-05-31","2024-06-07","2024-06-14","2024-06-21","2024-06-28","2024-07-05","2024-07-12","2024-07-19","2024-07-26","2024-08-02","2024-08-09","2024-08-16","2024-08-23","2024-08-30","2024-09-06","2024-09-13","2024-09-20","2024-09-27","2024-10-04","2024-10-11","2024-10-18","2024-10-25","2024-11-01","2024-11-08","2024-11-15","2024-11-22","2024-11-29","2024-12-06","2024-12-13","2024-12-20","2024-12-27","2025-01-03","2025-01-10","2025-01-17","2025-01-24","2025-01-31","2025-02-07","2025-02-14","2025-02-21","2025-02-28","2025-03-07","2025-03-14","2025-03-21","2025-03-28","2025-04-04","2025-04-11","2025-04-18","2025-04-25","2025-05-02","2025-05-09","2025-05-16","2025-05-23","2025-05-30","2025-06-06","2025-06-13","2025-06-20","2025-06-27","2025-07-04","2025-07-11","2025-07-18","2025-07-25","2025-08-01","2025-08-08","2025-08-15","2025-08-22","2025-08-29","2025-09-05","2025-09-12","2025-09-19","2025-09-26","2025-10-03","2025-10-10","2025-10-17","2025-10-24","2025-10-31","2025-11-07","2025-11-14","2025-11-21","2025-11-28","2025-12-05","2025-12-12","2025-12-19","2025-12-26","2026-01-02","2026-01-09","2026-01-16","2026-01-23","2026-01-30","2026-02-06","2026-02-13","2026-02-20","2026-02-27","2026-03-06","2026-03-13","2026-03-20","2026-03-27","2026-04-03","2026-04-10"],series:{"CCFI":[1311.85,1389.16,1495.98,1592.57,1733.47,1829.22,1922.46,2011.33,2085.05,2153.56,2180.69,2133.48,2138.32,2073.41,2019.27,1974.46,1912.46,1818.31,1742.19,1638.42,null,1476.98,1405.22,1366.4,1367.54,1388.22,1438.97,1467.91,1474.0,1465.16,1486.06,1491.29,1515.07,1547.74,1560.87,1557.76,1505.1,null,1415.03,1387.16,1318.71,1250.65,1211.15,1191.69,1147.76,1111.71,1102.71,1107.28,1110.94,1122.4,1121.08,1106.38,1104.88,1107.4,1117.61,1154.98,1243.05,1342.46,1369.34,1342.99,1313.7,1303.54,1261.35,1232.29,1200.73,1193.34,1174.87,1156.32,1149.14,1125.3,1120.23,1087.41,null,1014.78,973.11,992.74,1021.39,1058.17,1094.03,1122.79,1121.8,1114.89,1118.07,1124.73,1146.67,null,1194.89,1209.85,1208.75,1175.59,1122.15,1088.14,null,1044.57,1054.26,1072.16,1120.61,1139.04,1184.7,1209.84],"PDCI":[1004.0,986.0,958.0,914.0,890.0,890.0,876.0,911.0,979.0,999.0,999.0,1010.0,990.0,941.0,941.0,924.0,932.0,941.0,916.0,967.0,999.0,1036.0,1081.0,1154.0,1209.0,1320.0,1441.0,1439.0,1467.0,1442.0,1413.0,1364.0,1372.0,1351.0,1335.0,1260.0,1278.0,1177.0,1158.0,1124.0,1179.0,1190.0,1236.0,1248.0,1239.0,1242.0,1225.0,1190.0,1198.0,1199.0,1172.0,1163.0,1147.0,1171.0,1147.0,1124.0,1125.0,1105.0,1087.0,1061.0,1027.0,1038.0,1053.0,1050.0,1068.0,1091.0,1080.0,1078.0,1059.0,1046.0,1040.0,1020.0,1036.0,1109.0,1084.0,1181.0,1216.0,1225.0,1271.0,1287.0,1336.0,1308.0,1342.0,1331.0,1342.0,1337.0,1281.0,1243.0,1256.0,1195.0,1185.0,1242.0,1173.0,1134.0,1179.0,1198.0,1219.0,1236.0,1204.0,null]}},
+  bdi:     {labels:["2025-10-17","2025-10-20","2025-10-21","2025-10-22","2025-10-23","2025-10-24","2025-10-27","2025-10-28","2025-10-29","2025-10-30","2025-10-31","2025-11-03","2025-11-04","2025-11-05","2025-11-06","2025-11-07","2025-11-10","2025-11-11","2025-11-12","2025-11-13","2025-11-14","2025-11-17","2025-11-18","2025-11-19","2025-11-20","2025-11-21","2025-11-24","2025-11-25","2025-11-26","2025-11-27","2025-11-28","2025-12-01","2025-12-02","2025-12-03","2025-12-04","2025-12-05","2025-12-08","2025-12-09","2025-12-10","2025-12-11","2025-12-12","2025-12-15","2025-12-16","2025-12-17","2025-12-18","2025-12-19","2025-12-22","2025-12-23","2025-12-24","2026-01-02","2026-01-05","2026-01-06","2026-01-07","2026-01-08","2026-01-09","2026-01-12","2026-01-13","2026-01-14","2026-01-15","2026-01-16","2026-01-19","2026-01-20","2026-01-21","2026-01-22","2026-01-23","2026-01-26","2026-01-27","2026-01-28","2026-01-29","2026-01-30","2026-02-02","2026-02-03","2026-02-04","2026-02-05","2026-02-06","2026-02-09","2026-02-10","2026-02-11","2026-02-12","2026-02-13","2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-23","2026-02-24","2026-02-25","2026-02-26","2026-02-27","2026-03-02","2026-03-03","2026-03-04","2026-03-05","2026-03-06","2026-03-09","2026-03-10","2026-03-11","2026-03-12","2026-03-13","2026-03-16","2026-03-17","2026-03-18","2026-03-19","2026-03-20","2026-03-23","2026-03-24","2026-03-25","2026-03-26","2026-03-27","2026-03-30","2026-03-31","2026-04-01","2026-04-02","2026-04-07","2026-04-08","2026-04-09","2026-04-10","2026-04-13","2026-04-14"],series:{"BDTI":[1207.0,1218.0,1236.0,1226.0,1234.0,1256.0,1271.0,1288.0,1365.0,1430.0,1436.0,1436.0,1414.0,1403.0,1403.0,1401.0,1394.0,1395.0,1407.0,1440.0,1453.0,1456.0,1445.0,1426.0,1443.0,1457.0,1463.0,1468.0,1463.0,1458.0,1452.0,1432.0,1420.0,1407.0,1395.0,1384.0,1380.0,1371.0,1379.0,1392.0,1396.0,1392.0,1389.0,1414.0,1402.0,1401.0,1387.0,1343.0,1319.0,1207.0,1188.0,1181.0,1165.0,1211.0,1259.0,1296.0,1347.0,1410.0,1500.0,1562.0,1598.0,1572.0,1588.0,1619.0,1626.0,1631.0,1646.0,1646.0,1653.0,1702.0,1732.0,1672.0,1678.0,1679.0,1691.0,1710.0,1727.0,1721.0,1713.0,1719.0,1739.0,1747.0,1743.0,1766.0,1787.0,1809.0,1842.0,1885.0,1944.0,1991.0,2322.0,2866.0,3002.0,3083.0,3069.0,3040.0,2924.0,2835.0,2684.0,2586.0,2849.0,2850.0,2743.0,2842.0,2962.0,3120.0,3572.0,3618.0,3716.0,3737.0,3723.0,3705.0,3678.0,3639.0,3498.0,3593.0,3658.0,3561.0,3422.0,3275.0],"BDI":[2069.0,2071.0,2094.0,2092.0,2057.0,1991.0,1976.0,1950.0,1961.0,1983.0,1966.0,1945.0,1958.0,2003.0,2063.0,2104.0,2084.0,2072.0,2030.0,2077.0,2125.0,2153.0,2216.0,2260.0,2270.0,2275.0,2295.0,2309.0,2401.0,2480.0,2560.0,2583.0,2600.0,2845.0,2814.0,2727.0,2694.0,2557.0,2430.0,2294.0,2205.0,2193.0,2204.0,2121.0,2071.0,2023.0,1979.0,1889.0,1877.0,1882.0,1851.0,1830.0,1776.0,1718.0,1688.0,1659.0,1608.0,1566.0,1532.0,1567.0,1650.0,1729.0,1803.0,1761.0,1762.0,1780.0,1999.0,2016.0,2002.0,2148.0,2124.0,2028.0,1955.0,1936.0,1923.0,1895.0,1882.0,1958.0,2095.0,2083.0,2100.0,2095.0,2063.0,2019.0,2043.0,2112.0,2129.0,2121.0,2117.0,2140.0,2187.0,2242.0,2233.0,2138.0,2010.0,2066.0,1919.0,1926.0,1972.0,2028.0,2038.0,2024.0,2064.0,2057.0,2056.0,2037.0,1989.0,2001.0,2014.0,2031.0,2017.0,1995.0,2030.0,2066.0,2095.0,2139.0,2161.0,2201.0,2250.0,2354.0]}},
+  gi:      {labels:["1\u6708","2\u6708","3\u6708","4\u6708","5\u6708","6\u6708","7\u6708","8\u6708","9\u6708","10\u6708","11\u6708","12\u6708"],series:{"2023":[null,319.0,349.0,316.0,416.0,654.0,419.0,232.0,582.0,444.0,727.0,817.0],"2024":[null,327.0,439.0,463.0,474.0,837.0,407.0,383.0,652.0,520.0,788.0,793.0],"2025":[null,436.0,520.0,452.0,632.0,871.0,404.0,481.0,582.0,446.0,780.0,791.0233],"2026":[null,837.5349,null,null,null,null,null,null,null,null,null,null]}},
+  tb:      {labels:["2023\u7b2c1\u6b21","2023\u7b2c2\u6b21","2023\u7b2c3\u6b21","2023\u7b2c4\u6b21","2023\u7b2c5\u6b21","2023\u7b2c6\u6b21","2024\u7b2c1\u6b21","2024\u7b2c2\u6b21","2024\u7b2c3\u6b21","2024\u7b2c4\u6b21","2024\u7b2c5\u6b21","2024\u7b2c6\u6b21","2025\u7b2c1\u6b21","2025\u7b2c2\u6b21","2025\u7b2c3\u6b21","2025\u7b2c4\u6b21","2025\u7b2c5\u6b21","2025\u7b2c6\u6b21","2026\u7b2c1\u6b21"],series:{"变压器":[302241.0,439005.0,291928.0,174001.0,160999.0,171608.0,265413.0,422198.0,349686.0,284305.191674,151803.918734,137985.750571,354907.0,412945.0,425964.0,252679.0,222136.0,292130.0,223063.0],"组合电器":[297041.0,319532.0,266777.0,293570.0,229795.0,271168.0,324496.0,309391.0,417198.0,335893.031725,283333.062218,179945.088599,439375.0,413334.0,493420.0,443393.0,293059.0,412877.0,223438.0],"开关柜":[83542.705362,109047.047415,114250.144112,83915.368154,74909.599979,55914.692111,102678.141515,137227.632654,126662.03643,81857.50065,72988.315301,64204.0,99713.0,170439.0,178290.0,97736.0,89845.0,75286.0,98311.0],"断路器":[20526.0,30352.0,18256.0,11227.0,15736.0,10698.0,29651.0,29158.0,25399.0,12475.63979,13622.697959,16357.615909,15152.0,30910.0,20063.0,20460.0,7534.0,7708.0,12140.0],"隔离开关":[27718.0,38767.0,22897.0,17202.0,11743.0,12282.0,32945.0,38074.0,32041.0,22152.03109,15249.180676,14570.486821,28350.0,48681.0,45773.0,21651.0,15736.0,18074.0,23574.0],"继保监控":[85528.0,136014.0,106228.0,66002.0,45897.0,38691.0,43065.0,104125.0,103130.0,69606.215671,63600.0,37365.287293,66059.0,151988.0,161763.0,64318.0,39175.0,50183.0,62808.0],"避雷器":[17946.0,22621.0,13907.0,7223.0,6701.0,13080.0,17511.0,21697.0,12300.0,9851.903849,12299.708135,10388.553916,24173.0,20814.0,16867.0,9416.0,9534.0,18636.0,18923.0],"互感器":[26220.0,45505.0,31214.0,22184.0,15191.0,20554.0,32021.0,51650.0,41486.0,29012.512541,19044.937575,17773.216915,37001.0,60043.0,50917.0,29444.0,18778.0,23106.0,21515.0],"电容器":[26376.0,33497.0,31088.0,22028.0,10582.0,12646.0,22394.0,28386.0,26759.0,20008.986302,26758.505212,9638.216695,28375.0,37385.0,35560.0,21503.0,20197.0,18516.0,17847.0],"电抗器":[22615.0,41691.0,20771.0,38431.0,24789.0,23229.0,41215.0,49386.0,55052.0,43085.897574,38479.377883,14007.9207,59820.0,54515.0,35686.0,43936.0,31261.0,29710.0,17098.0],"其他":[346566.294638,379055.952585,256998.855888,198523.631846,343350.400021,239606.307889,322721.858485,373562.367346,344880.148422,305469.964758,337614.296307,201263.862581,370984.0,362574.0,654561.0,407889.0,308606.0,374319.0,264673.0],"同比":[0.527809,0.864681,0.099317,0.476393,0.314793,-0.077964,-0.017678,-0.018953,0.306799,0.299058,0.101204,-0.190893,0.234823,0.127023,0.380733,0.163717,0.020359,0.877107,-0.354692]}},
+  exp_reg: {labels:["23-01","23-02","23-03","23-04","23-05","23-06","23-07","23-08","23-09","23-10","23-11","23-12","24-01","24-02","24-03","24-04","24-05","24-06","24-07","24-08","24-09","24-10","24-11","24-12","25-01","25-02","25-03","25-04","25-05","25-06","25-07","25-08","25-09","25-10","25-11","25-12","26-01","26-02"],series:{"整体":[0.250352,0.144674,0.597837,0.689932,0.466969,0.430465,0.176239,0.170559,0.353014,0.253363,0.235791,0.298667,0.307584,0.619672,0.227054,0.148601,0.238911,0.166251,0.355948,0.42025,0.166042,0.634639,0.329527,0.478347,0.423445,0.21136,0.253384,0.511797,0.327417,0.43751,0.340755,0.268988,0.487845,0.151849,0.231731,0.34422,0.206547,0.603281],"亚洲":[-0.118107,0.223239,0.506722,0.429996,0.340456,0.207851,0.163474,-0.08283,0.415331,0.421383,0.321937,0.341684,0.673838,0.143167,0.27303,0.233133,0.289893,0.264281,0.343711,0.81051,0.243528,0.661859,0.254533,0.343251,0.307316,0.679476,0.39952,0.252604,0.346015,0.519849,0.587183,0.233345,0.540523,0.19577,0.165038,0.709099,0.276657,0.614206],"非洲":[0.719742,0.62884,0.935066,1.54165,0.641346,0.978276,0.180421,0.706936,-0.291093,0.130796,0.190467,0.257515,-0.012192,1.011301,0.557333,0.093053,0.36236,0.0947,0.624464,0.223074,0.498528,0.620461,0.557183,0.19637,0.422819,-0.209983,-0.107422,0.348871,-0.086461,0.075624,0.020149,0.116115,0.706077,-0.106724,0.26182,0.720277,0.41251,2.33214],"欧洲":[1.021258,0.006642,0.944377,1.360007,1.0078,1.114388,0.258175,0.288486,0.64291,0.067456,0.041491,-0.049141,0.025401,1.537649,0.167647,0.108031,0.294582,0.010942,0.501309,0.375906,0.197386,0.976279,0.137919,1.156102,0.623086,-0.188883,0.107929,1.424007,0.355807,0.485064,0.156743,0.663868,0.378425,0.123024,0.65506,0.102043,0.072872,0.453753],"南美洲":[0.264106,0.118587,0.615209,0.93525,1.358102,0.508187,0.344176,0.358964,1.268192,0.374424,0.125132,0.399712,0.436801,0.753787,0.144376,-0.22033,-0.086255,0.205511,0.017101,0.048065,-0.166995,0.661855,0.652733,0.588134,0.552155,0.364685,0.200486,0.752553,0.919286,0.153153,0.303168,0.2563,0.451493,0.00472,0.100309,-0.227859,-0.136541,0.048942],"北美洲":[0.907189,-0.265265,0.376568,0.686422,-0.096454,0.010787,-0.040498,0.268051,0.12296,0.176419,0.335092,0.847361,0.075792,0.868261,-0.033466,0.302286,0.091896,0.296428,0.518833,-0.005829,0.115489,0.131544,0.632932,0.457185,0.391022,0.281229,0.441213,0.114238,-0.098708,0.573706,0.196366,-0.061698,0.159554,0.469198,0.001079,-0.149998,0.331989,0.154084],"大洋洲":[-0.130141,0.684501,0.235633,-0.130762,-0.000231,0.189294,0.060449,0.469373,-0.178268,-0.053816,0.369303,0.260072,0.225976,0.162196,0.077536,0.229452,0.401186,-0.112672,-0.009557,0.280551,-0.206238,0.284843,-0.127164,0.274538,0.681405,0.107828,0.401367,0.787683,1.112624,1.343121,0.439174,-0.083648,0.762663,0.510894,0.698709,0.126339,0.103808,0.580532]}},
+  exp_prd: {labels:["23-01","23-02","23-03","23-04","23-05","23-06","23-07","23-08","23-09","23-10","23-11","23-12","24-01","24-02","24-03","24-04","24-05","24-06","24-07","24-08","24-09","24-10","24-11","24-12","25-01","25-02","25-03","25-04","25-05","25-06","25-07","25-08","25-09","25-10","25-11","25-12","26-01","26-02"],series:{"变压器":[0.815034,-0.10927,0.851341,1.079378,1.111115,0.724615,0.491793,0.340961,0.806336,0.596309,0.218779,0.2173,0.337468,1.165137,0.647027,0.41164,0.42923,0.335538,0.434695,0.584119,0.310439,0.709222,0.772119,0.975701,0.713475,0.634549,0.319444,0.41908,0.302487,0.630141,0.546837,0.582832,0.604029,0.391291,0.171055,0.381998,0.288643,0.581262],"电表":[-0.018099,0.164012,0.654428,0.871811,0.238922,0.55266,0.048105,0.232402,0.222781,0.045461,0.230125,-0.001914,0.399783,0.212959,-0.16141,-0.14776,0.165034,0.096204,0.30073,0.246525,0.09347,0.201116,0.088226,0.188217,0.207006,-0.04376,0.081692,0.346303,-0.041532,-0.218699,-0.114698,-0.256792,-0.251052,-0.128429,-0.180649,-0.067178,-0.265249,0.491979],"电缆":[-0.142979,0.44014,0.559524,0.260439,0.185527,0.209388,-0.063502,0.005645,-0.004363,0.143037,0.562488,0.761785,0.449875,0.868707,0.171045,0.112228,0.047915,0.136691,0.684596,0.705543,0.107484,1.122154,-0.004227,0.173503,0.243009,-0.174127,0.110451,0.898743,0.770233,0.627919,0.162872,0.011623,0.624779,-0.055889,0.609571,0.487676,0.320144,0.765298],"开关":[0.511307,0.374812,0.400083,0.909538,0.658755,0.203941,0.107843,0.050785,0.201185,0.358401,0.026197,0.467104,0.103708,0.027775,0.264155,-0.014561,0.045633,0.014002,-0.142886,-0.019373,-0.269842,0.154418,0.071968,0.028682,0.180085,0.281428,0.354851,0.246605,0.170734,0.305602,0.638075,0.375437,0.843761,0.038547,0.294557,0.455104,0.137326,0.415104],"绝缘子":[0.356055,0.142007,0.279414,0.631285,0.13412,0.005781,0.078363,0.164783,0.145189,-0.197938,-0.097276,0.119507,-0.052488,0.059439,-0.035069,0.048558,0.262051,0.160328,0.047039,0.045028,0.166215,0.510779,0.23506,0.524065,0.44392,0.245518,0.439565,0.563411,0.4158,0.551544,0.60844,0.433409,0.545215,0.30162,0.500185,0.301475,0.257895,0.584663],"熔断器、断路器":[0.130437,0.115572,0.4451,0.699946,0.207573,1.129029,0.346455,-0.011686,0.351597,0.300901,0.359563,0.47406,0.399782,0.539914,-0.131144,0.230187,0.531137,-0.217427,0.254993,0.237294,0.166201,0.560103,0.151401,0.282436,0.297288,0.126587,0.434118,0.07636,0.023609,0.481806,0.121512,0.352885,0.595887,-0.077748,0.314964,0.277095,0.409756,0.621288]}},
+  oil:     {labels:["01-01","01-02","01-03","01-04","01-05","01-06","01-07","01-08","01-09","01-10","01-11","01-12","01-13","01-14","01-15","01-16","01-17","01-18","01-19","01-20","01-21","01-22","01-23","01-24","01-25","01-26","01-27","01-28","01-29","01-30","01-31","02-01","02-02","02-03","02-04","02-05","02-06","02-07","02-08","02-09","02-10","02-11","02-12","02-13","02-14","02-15","02-16","02-17","02-18","02-19","02-20","02-21","02-22","02-23","02-24","02-25","02-26","02-27","02-28","03-01","03-02","03-03","03-04","03-05","03-06","03-07","03-08","03-09","03-10","03-11","03-12","03-13","03-14","03-15","03-16","03-17","03-18","03-19","03-20","03-21","03-22","03-23","03-24","03-25","03-26","03-27","03-28","03-29","03-30","03-31","04-01","04-02","04-03","04-04","04-05","04-06","04-07","04-08","04-09","04-10","04-11","04-12","04-13","04-14","04-15","04-16","04-17","04-18","04-19","04-20","04-21","04-22","04-23","04-24","04-25","04-26","04-27","04-28","04-29","04-30","05-01","05-02","05-03","05-04","05-05","05-06","05-07","05-08","05-09","05-10","05-11","05-12","05-13","05-14","05-15","05-16","05-17","05-18","05-19","05-20","05-21","05-22","05-23","05-24","05-25","05-26","05-27","05-28","05-29","05-30","05-31","06-01","06-02","06-03","06-04","06-05","06-06","06-07","06-08","06-09","06-10","06-11","06-12","06-13","06-14","06-15","06-16","06-17","06-18","06-19","06-20","06-21","06-22","06-23","06-24","06-25","06-26","06-27","06-28","06-29","06-30","07-01","07-02","07-03","07-04","07-05","07-06","07-07","07-08","07-09","07-10","07-11","07-12","07-13","07-14","07-15","07-16","07-17","07-18","07-19","07-20","07-21","07-22","07-23","07-24","07-25","07-26","07-27","07-28","07-29","07-30","07-31","08-01","08-02","08-03","08-04","08-05","08-06","08-07","08-08","08-09","08-10","08-11","08-12","08-13","08-14","08-15","08-16","08-17","08-18","08-19","08-20","08-21","08-22","08-23","08-24","08-25","08-26","08-27","08-28","08-29","08-30","08-31","09-01","09-02","09-03","09-04","09-05","09-06","09-07","09-08","09-09","09-10","09-11","09-12","09-13","09-14","09-15","09-16","09-17","09-18","09-19","09-20","09-21","09-22","09-23","09-24","09-25","09-26","09-27","09-28","09-29","09-30","10-01","10-02","10-03","10-04","10-05","10-06","10-07","10-08","10-09","10-10","10-11","10-12","10-13","10-14","10-15","10-16","10-17","10-18","10-19","10-20","10-21","10-22","10-23","10-24","10-25","10-26","10-27","10-28","10-29","10-30","10-31","11-01","11-02","11-03","11-04","11-05","11-06","11-07","11-08","11-09","11-10","11-11","11-12","11-13","11-14","11-15","11-16","11-17","11-18","11-19","11-20","11-21","11-22","11-23","11-24","11-25","11-26","11-27","11-28","11-29","11-30","12-01","12-02","12-03","12-04","12-05","12-06","12-07","12-08","12-09","12-10","12-11","12-12","12-13","12-14","12-15","12-16","12-17","12-18","12-19","12-20","12-21","12-22","12-23","12-24","12-25","12-26","12-27","12-28","12-29","12-30","12-31","01-01"],series:{"2021":[null,null,null,51.09,53.6,54.29,54.37,55.98,null,null,55.65,56.57,56.05,56.41,55.09,null,null,54.74,55.89,56.07,56.09,55.4,null,null,55.87,55.9,55.8,55.52,55.03,null,null,56.34,57.45,58.45,58.83,59.33,null,null,60.55,61.08,61.46,61.13,62.42,null,null,63.29,63.34,64.33,63.92,62.9,null,null,65.23,65.36,67.03,66.87,64.41,null,null,63.68,62.69,64.06,66.73,69.35,null,null,68.23,67.51,67.89,69.62,69.21,null,null,68.87,68.38,67.99,63.27,64.52,null,null,64.61,60.78,64.4,61.94,64.56,null,null,64.97,64.13,62.73,62.73,64.85,null,null,62.14,62.73,63.15,63.19,62.94,null,null,63.27,63.66,66.57,66.93,66.76,null,null,67.04,66.56,65.31,65.39,66.1,null,null,65.64,66.41,67.26,68.55,66.75,null,null,67.55,68.87,68.95,68.08,68.27,null,null,68.31,68.54,69.31,67.04,68.7,null,null,69.45,68.7,66.65,65.1,66.43,null,null,68.45,68.64,68.86,69.45,68.71,null,null,69.31,70.24,71.34,71.3,71.88,null,null,71.48,72.21,72.21,72.51,72.68,null,null,72.85,73.98,74.38,73.07,73.5,null,null,74.89,74.8,75.18,75.55,76.17,null,null,74.67,74.75,74.61,75.83,76.16,null,null,77.15,74.52,73.42,74.11,75.54,null,null,75.15,76.48,74.75,73.46,73.58,null,null,68.61,69.34,72.22,73.78,74.09,null,null,74.49,74.47,74.73,76.04,75.4,null,null,72.88,72.4,70.37,71.28,70.69,null,null,69.03,70.62,71.43,71.3,70.58,null,null,69.5,69.02,68.22,66.44,65.17,null,null,68.74,71.04,72.24,71.06,72.69,null,null,73.4,71.62,71.58,73.02,72.6,null,null,72.21,71.68,72.59,71.44,72.91,null,null,73.5,73.59,75.45,75.66,75.33,null,null,73.91,74.35,76.18,77.24,78.08,null,null,79.52,79.08,78.63,78.3,79.27,null,null,81.25,82.55,81.07,81.94,82.38,null,null,83.64,83.41,83.17,83.99,84.85,null,null,84.32,85.07,85.81,84.6,85.52,null,null,85.98,86.39,84.57,84.31,83.71,null,null,84.7,84.71,81.98,80.53,82.73,null,null,83.42,83.42,82.63,82.86,82.16,null,null,82.16,82.42,80.27,81.23,78.88,null,null,79.69,82.3,82.24,82.21,72.71,null,null,73.43,69.22,68.86,69.66,69.87,null,null,73.07,75.43,75.81,74.41,75.14,null,null,74.38,73.69,73.87,75.01,73.51,null,null,71.51,73.97,75.28,76.84,76.13,null,null,78.59,78.93,79.22,79.52,77.77,null],"2022":[null,null,78.97,78.97,79.99,80.79,81.74,null,null,81.74,80.86,83.71,84.46,86.05,null,null,86.05,86.47,88.43,88.43,87.88,null,null,86.26,86.26,88.19,89.33,90.02,null,null,89.25,89.25,89.46,89.46,93.26,null,null,93.26,90.77,91.54,91.54,94.43,null,null,94.43,93.27,93.27,94.8,93.53,null,null,93.53,95.38,96.83,96.83,97.92,null,null,94.11,97.96,112.91,112.91,118.09,null,null,123.19,123.19,127.96,111.12,112.65,null,null,106.88,99.9,98.01,106.62,107.91,null,null,115.6,115.46,121.58,121.58,120.63,null,null,112.46,110.21,110.21,107.89,104.37,null,null,107.51,106.62,101.05,100.56,102.76,null,null,98.47,104.62,108.76,108.76,111.68,null,null,113.14,107.23,106.78,108.31,106.63,null,null,102.3,104.97,105.3,107.57,107.12,null,null,107.56,104.95,110.12,110.88,112.37,null,null,105.92,102.44,107.49,107.43,111.53,null,null,114.22,111.91,109.09,112.02,112.53,null,null,113.4,113.54,114.01,117.38,119.41,null,null,121.65,115.58,116.27,117.59,119.7,null,null,119.49,120.55,123.56,123.05,121.99,null,null,122.25,121.15,118.49,119.79,113.1,null,null,114.11,114.63,111.72,110.03,113.1,null,null,115.07,117.96,116.24,109.01,111.61,null,null,113.48,102.75,100.67,104.63,107.0,null,null,107.08,99.48,99.56,99.09,101.14,null,null,106.25,107.33,106.9,103.84,103.18,null,null,103.18,104.38,106.6,107.12,103.95,null,null,100.01,100.52,100.52,94.11,94.91,null,null,96.64,96.3,97.39,99.59,98.14,null,null,98.14,92.33,93.64,93.64,96.71,null,null,96.47,100.2,101.2,99.33,100.97,null,null,105.07,99.3,96.48,92.35,93.01,null,null,95.73,92.82,87.99,89.14,92.83,null,null,93.99,93.16,94.09,90.83,91.34,null,null,91.99,90.61,89.82,90.45,86.14,null,null,84.05,86.26,89.31,88.48,85.13,null,null,88.85,91.79,93.36,94.41,97.91,null,null,96.18,96.18,92.44,94.56,91.62,null,null,91.61,90.02,92.4,92.37,93.49,null,null,93.25,93.51,95.68,96.95,95.76,null,null,92.8,94.64,96.15,94.66,98.56,null,null,98.56,97.91,95.35,92.64,95.98,null,null,93.13,93.13,93.85,89.77,87.61,null,null,87.44,87.44,85.4,85.33,83.62,null,null,83.62,83.02,86.96,86.96,85.56,null,null,82.67,79.34,77.16,76.14,76.09,null,null,77.98,80.67,82.69,81.2,79.03,null,null,79.03,79.98,82.19,82.19,80.97,null,null,83.91,84.32,84.32,83.45,85.9,null,null],"2023":[null,null,85.9,77.83,78.68,78.56,null,null,78.56,80.09,82.66,82.66,85.27,null,null,84.45,85.91,85.91,86.15,87.62,null,null,null,86.12,86.11,86.11,86.65,null,null,86.65,85.45,82.83,82.16,79.93,null,null,80.98,83.68,85.08,84.49,86.38,null,null,86.6,85.57,85.37,85.13,82.99,null,null,84.06,83.04,80.59,82.2,83.15,null,null,82.44,83.44,84.3,84.74,85.82,null,null,86.17,83.28,82.65,81.58,82.77,null,null,80.76,77.44,73.68,74.69,72.96,null,null,73.78,75.31,76.68,75.9,74.98,null,null,78.11,78.64,78.27,79.26,79.88,null,null,84.92,84.93,84.98,84.98,85.11,null,null,84.17,85.6,87.32,86.08,86.3,null,null,84.75,84.76,83.11,81.09,81.65,null,null,82.72,80.76,77.68,78.36,80.32,null,null,79.3,75.31,72.32,72.49,75.29,null,null,77.0,77.43,76.4,74.97,74.16,null,null,75.22,74.9,76.95,75.85,75.66,null,null,75.98,77.65,78.35,76.25,76.94,null,null,77.06,73.53,72.65,74.27,76.12,null,null,76.7,76.28,76.94,75.95,74.78,null,null,71.83,74.28,73.19,75.66,76.6,null,null,76.08,75.89,77.11,74.13,73.84,null,null,74.17,72.25,74.02,74.33,74.89,null,null,74.64,76.24,76.64,76.64,78.46,null,null,77.68,79.39,80.1,81.35,79.86,null,null,78.49,79.62,79.45,79.63,81.06,null,null,82.73,83.63,82.91,84.23,84.98,null,null,85.55,84.9,83.19,85.13,86.23,null,null,85.33,86.16,87.54,86.39,86.8,null,null,86.2,84.84,83.44,84.11,84.79,null,null,84.45,84.02,83.2,83.35,84.47,null,null,84.41,85.48,85.85,86.85,88.54,null,null,88.99,90.03,90.59,89.91,90.64,null,null,90.63,92.05,91.87,93.69,93.92,null,null,94.42,94.33,93.52,93.29,93.26,null,null,93.28,93.95,96.54,95.37,95.3,null,null,null,null,null,null,84.57,null,null,88.14,87.64,85.81,85.99,90.88,null,null,89.64,89.89,91.49,92.37,92.15,null,null,89.82,88.06,90.12,87.92,90.47,null,null,87.44,87.4,84.62,86.84,84.88,null,null,85.17,81.6,79.53,80.0,81.42,null,null,82.51,82.46,81.17,77.41,80.6,null,null,82.31,82.44,81.95,81.41,80.57,null,null,79.97,81.67,83.09,82.82,78.87,null,null,78.02,77.19,74.29,74.04,75.83,null,null,76.02,73.23,74.25,76.6,76.54,null,null,77.94,79.22,79.69,79.38,79.06,null,null,79.12,81.06,79.64,78.38,77.03,null,null,null],"2024":[78.29,75.88,78.24,77.58,78.75,null,null,76.11,77.58,76.79,77.4,78.28,null,null,78.14,78.28,77.87,79.09,78.55,null,null,80.05,79.54,80.03,82.42,83.54,null,null,82.39,82.86,81.7,78.69,77.32,null,null,77.98,78.58,79.2,81.62,82.18,null,null,81.99,82.76,81.59,82.85,83.46,null,null,83.55,82.33,83.02,83.66,81.61,null,null,82.52,83.64,83.67,83.61,83.54,null,null,82.79,82.03,82.95,82.95,82.07,null,null,82.2,81.91,84.02,85.41,85.33,null,null,86.88,87.37,85.94,85.77,85.42,null,null,86.74,86.24,86.08,87.47,87.47,null,null,87.41,88.91,89.34,90.64,91.16,null,null,90.37,89.41,90.47,89.73,90.44,null,null,90.09,90.01,87.28,87.1,87.28,null,null,86.99,88.41,88.01,89.0,89.49,null,null,88.39,87.85,83.43,83.66,82.95,null,null,83.32,83.15,83.57,83.87,82.78,null,null,83.35,82.37,82.74,83.26,83.97,null,null,83.7,82.87,81.89,81.35,82.11,null,null,83.09,84.21,83.59,81.85,81.61,null,null,78.35,77.51,78.4,79.86,79.61,null,null,81.62,81.91,82.59,82.74,82.61,null,null,84.24,85.32,85.06,85.7,85.23,null,null,86.0,85.0,85.24,86.38,86.4,null,null,86.59,86.23,87.33,87.42,86.53,null,null,85.74,84.65,85.07,85.39,85.02,null,null,84.84,83.72,85.07,85.1,82.62,null,null,82.39,81.0,81.7,82.36,81.12,null,null,79.77,78.62,80.71,79.51,76.8,null,null,76.8,76.47,78.32,79.15,79.65,null,null,82.29,80.68,79.75,81.03,79.67,null,null,77.65,77.19,76.04,77.21,79.01,null,null,81.42,79.54,78.64,79.93,78.79,null,null,77.51,73.74,72.69,72.68,71.05,null,null,71.83,69.18,70.6,71.96,71.6,null,null,72.74,73.69,73.64,74.87,74.48,null,null,73.89,75.16,73.45,71.59,71.97,null,null,71.76,null,null,null,null,null,null,80.92,77.17,76.57,79.39,79.03,null,null,77.45,74.24,74.21,74.44,73.05,null,null,74.28,76.03,74.95,74.37,76.04,null,null,71.41,71.11,72.54,73.15,73.09,null,null,75.07,75.52,74.91,75.62,73.86,null,null,71.82,71.88,72.27,72.55,71.03,null,null,73.29,73.3,72.8,74.22,75.16,null,null,73.0,72.8,72.82,73.27,72.93,null,null,71.82,73.61,72.3,72.08,71.11,null,null,72.13,72.18,73.51,73.4,74.48,null,null,73.9,73.18,73.38,72.87,72.93,null,null,72.62,73.57,73.73,73.25,74.16,null,null,74.38,74.63],"2025":[74.94,75.92,76.5,null,null,76.29,77.04,76.15,76.91,79.75,null,null,81.0,79.91,82.02,81.28,80.78,null,null,80.14,79.28,78.99,78.28,78.49,null,null,77.07,77.48,76.57,76.86,76.75,null,null,75.95,76.19,74.6,74.28,74.65,null,null,75.86,76.99,75.17,75.01,74.73,null,null,75.21,75.83,76.03,76.47,74.42,null,null,74.77,73.01,72.52,74.03,73.17,null,null,71.61,71.03,69.29,69.45,70.35,null,null,69.27,69.55,70.94,69.87,70.57,null,null,71.06,70.55,70.77,71.99,72.15,null,null,72.99,73.01,73.78,74.02,73.62,null,null,74.73,74.48,74.94,70.13,65.57,null,null,64.2,62.81,65.47,63.32,64.75,null,null,64.87,64.66,65.84,67.95,null,null,null,66.25,67.43,66.11,66.54,66.86,null,null,65.85,60.22,60.22,null,null,null,null,60.22,62.14,61.11,62.83,63.9,null,null,64.95,66.62,66.08,64.52,65.4,null,null,65.53,65.37,64.9,64.43,64.77,null,null,64.73,64.08,64.89,64.14,63.89,null,null,64.62,65.62,64.85,65.33,66.46,null,null,67.03,66.86,69.76,69.35,74.22,null,null,73.22,76.44,76.69,78.84,77.0,null,null,71.47,67.13,67.67,67.72,67.76,null,null,67.6,67.1,69.1,68.79,68.29,null,null,69.57,70.14,70.18,68.63,70.35,null,null,69.2,68.7,68.51,69.51,69.27,null,null,69.2,68.58,68.5,69.17,68.43,null,null,70.03,72.5,73.23,72.52,69.66,null,null,68.75,67.63,66.88,66.42,66.58,null,null,66.62,66.11,65.62,66.83,65.84,null,null,66.59,65.78,66.83,67.66,67.72,null,null,68.79,67.21,68.04,68.61,68.11,null,null,68.14,69.13,67.59,66.98,65.49,null,null,66.01,66.38,67.48,66.36,66.98,null,null,67.43,68.46,67.94,67.43,66.67,null,null,66.56,67.62,69.3,69.41,70.12,null,null,67.96,67.01,65.34,64.1,64.52,null,null,65.46,65.44,66.24,65.21,62.72,null,null,63.31,62.38,61.9,61.05,61.28,null,null,61.0,61.31,62.58,65.98,65.93,null,null,65.61,64.39,64.91,64.99,65.06,null,null,64.88,64.43,63.51,63.37,63.62,null,null,64.05,65.15,62.7,63.0,64.38,null,null,64.19,64.88,63.5,63.37,62.55,null,null,63.36,62.47,63.12,63.33,63.19,null,null,63.16,62.44,62.66,63.25,63.74,null,null,62.48,61.93,62.2,61.27,61.11,null,null,60.55,58.91,59.67,59.81,60.46,null,null,62.06,62.37,62.23,60.63,60.63,null,null,61.93,61.91,60.84,null],"2026":[null,60.74,null,null,61.75,60.69,59.95,61.98,63.33,null,null,63.86,65.46,66.51,63.75,64.12,null,null,63.93,64.91,65.23,64.05,65.87,null,null,65.58,67.56,68.39,70.7,70.68,null,null,66.29,67.32,69.45,67.54,68.04,null,null,69.03,68.79,69.39,67.51,67.74,null,null,null,null,null,null,null,null,null,71.48,70.76,70.84,70.74,72.47,null,null,77.73,81.39,81.39,85.4,92.68,null,null,98.95,87.79,91.97,100.44,103.12,null,null,100.19,103.4,107.36,108.63,112.17,null,null,99.93,104.47,102.2,107.99,112.55,null,null,116.19,118.33,101.14,109.01,109.75,null,null,109.75,109.25,94.74,95.91,95.19,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]}},
+  opec:    {labels:["1\u6708","2\u6708","3\u6708","4\u6708","5\u6708","6\u6708","7\u6708","8\u6708","9\u6708","10\u6708","11\u6708","12\u6708"],series:{"2022":[2807.9,2849.9,2847.5,2867.8,2840.6,2868.5,2896.4,2965.3,2969.6,2955.8,2886.1,2891.9],"2023":[2879.8,2887.3,2877.3,2853.0,2808.4,2820.0,2735.8,2750.1,2783.7,2672.8,2661.5,2668.1],"2024":[2638.2,2658.1,2664.6,2660.9,2663.8,2653.5,2683.8,2665.2,2609.4,2654.5,2676.9,2669.0],"2025":[2671.5,2686.6,2677.4,2683.6,2705.0,2728.6,2749.5,2791.6,2842.7,2844.2,2845.9,2856.4]}},
+  pet:{labels:["2021-01-01", "2021-01-08", "2021-01-15", "2021-01-22", "2021-01-29", "2021-02-05", "2021-02-12", "2021-02-19", "2021-02-26", "2021-03-05", "2021-03-12", "2021-03-19", "2021-03-26", "2021-04-02", "2021-04-09", "2021-04-16", "2021-04-23", "2021-04-30", "2021-05-07", "2021-05-14", "2021-05-21", "2021-05-28", "2021-06-04", "2021-06-11", "2021-06-18", "2021-07-02", "2021-07-09", "2021-07-16", "2021-07-23", "2021-08-06", "2021-08-13", "2021-08-20", "2021-08-27", "2021-09-03", "2021-09-10", "2021-09-17", "2021-09-24", "2021-10-08", "2021-10-15", "2021-10-22", "2021-10-29", "2021-11-12", "2021-11-19", "2021-11-26", "2021-12-03", "2021-12-10", "2021-12-24", "2022-01-07", "2022-01-14", "2022-01-21", "2022-02-04", "2022-02-11", "2022-02-18", "2022-02-25", "2022-03-04", "2022-03-11", "2022-03-18", "2022-03-25", "2022-04-01", "2022-04-08", "2022-04-15", "2022-04-22", "2022-04-29", "2022-05-06", "2022-05-13", "2022-05-20", "2022-05-27", "2022-06-03", "2022-06-10", "2022-06-17", "2022-06-24", "2022-07-01", "2022-07-08", "2022-07-15", "2022-07-22", "2022-07-29", "2022-08-05", "2022-08-12", "2022-08-19", "2022-08-26", "2022-09-02", "2022-09-09", "2022-09-16", "2022-09-23", "2022-09-30", "2022-10-07", "2022-10-14", "2022-10-21", "2022-10-28", "2022-11-04", "2022-11-11", "2022-11-18", "2022-11-25", "2022-12-02", "2022-12-09", "2022-12-16", "2022-12-23", "2022-12-30", "2023-01-06", "2023-01-13", "2023-01-20", "2023-01-27", "2023-02-03", "2023-02-17", "2023-02-24", "2023-03-03", "2023-03-17", "2023-03-24", "2023-03-31", "2023-04-07", "2023-04-14", "2023-04-21", "2023-04-28", "2023-05-05", "2023-05-12", "2023-05-19", "2023-05-26", "2023-06-02", "2023-06-09", "2023-06-16", "2023-06-23", "2023-06-30", "2023-07-07", "2023-07-14", "2023-07-21", "2023-07-28", "2023-08-04", "2023-08-11", "2023-08-18", "2023-08-25", "2023-09-01", "2023-09-08", "2023-09-15", "2023-09-22", "2023-09-29", "2023-10-06", "2023-10-12", "2023-10-19", "2023-10-26", "2023-11-03", "2023-11-10", "2023-11-17", "2023-11-24", "2023-12-01", "2023-12-08", "2023-12-15", "2023-12-22", "2023-12-29", "2024-01-05", "2024-01-12", "2024-01-19", "2024-01-26", "2024-02-02", "2024-02-09", "2024-02-16", "2024-02-23", "2024-03-01", "2024-03-08", "2024-03-15", "2024-03-22", "2024-03-29", "2024-04-05", "2024-04-12", "2024-04-19", "2024-04-26", "2024-05-03", "2024-05-10", "2024-05-17", "2024-05-24", "2024-05-31", "2024-06-07", "2024-06-14", "2024-06-21", "2024-06-28", "2024-07-05", "2024-07-12", "2024-07-19", "2024-07-26", "2024-08-02", "2024-08-09", "2024-08-16", "2024-08-23", "2024-08-30", "2024-09-06", "2024-09-13", "2024-09-20", "2024-09-27", "2024-10-04", "2024-10-11", "2024-10-18", "2024-10-25", "2024-11-01", "2024-11-08", "2024-11-15", "2024-11-22", "2024-11-29", "2024-12-06", "2024-12-13", "2024-12-20", "2024-12-27", "2025-01-03", "2025-01-10", "2025-01-17", "2025-01-24", "2025-01-31", "2025-02-07", "2025-02-14", "2025-02-21", "2025-02-28", "2025-03-07", "2025-03-14", "2025-03-21", "2025-03-28", "2025-04-04", "2025-04-11", "2025-04-18", "2025-04-25", "2025-05-02", "2025-05-09", "2025-05-16", "2025-05-23", "2025-05-31", "2025-06-06", "2025-06-13", "2025-06-21", "2025-06-27", "2025-07-04", "2025-07-11", "2025-07-18", "2025-07-25", "2025-08-01", "2025-08-08", "2025-08-15", "2025-08-22", "2025-08-29", "2025-09-05", "2025-09-12", "2025-09-19", "2025-09-26", "2025-10-03", "2025-10-10", "2025-10-17", "2025-10-24", "2025-10-31", "2025-11-07", "2025-11-14", "2025-11-21", "2025-11-28", "2025-12-05", "2025-12-12", "2025-12-19", "2025-12-26", "2026-01-02", "2026-01-09", "2026-01-16", "2026-01-23", "2026-01-30", "2026-02-06", "2026-02-13", "2026-02-20", "2026-02-27", "2026-03-06", "2026-03-13", "2026-03-20", "2026-03-27", "2026-04-03", "2026-04-10"],series:{"汽油裂解价差":[3.8, 3.78, 3.59, 3.68, 4.8, 5.14, 3.51, 6.7, 7.09, 6.04, 7.1, 7.04, 6.77, 8.48, 8.09, 8.58, 8.55, 9.32, 8.38, 6.0, 7.68, 7.95, 6.12, 6.99, 6.81, 9.45, 10.36, 9.88, 9.4, 10.4, 9.67, 8.25, 8.075, 9.325, 8.745, 8.95, 10.07, 11.45, 13.87, 16.61, 16.29, 11.77, 10.42, 7.01, 9.45, 13.97, 13.96, 11.98, 11.73, 11.97, 13.92, 16.91, 15.1, 16.27, 14.91, 14.71, 18.47, 13.57, 15.98, 20.37, 20.3, 22.57, 24.92, 30.31, 33.2, 40.48, 33.61, 35.2, 36.66, 35.08, 40.06, 30.77, 15.68, 7.73, 1.06, 7.84, 5.69, 11.36, 13.25, 8.33, -0.75, 6.28, -3.32, -1.39, 0.62, -0.08, -0.22, 1.33, -2.0, 6.93, 5.06, 8.19, 8.08, 5.99, 6.51, 6.35, 8.94, 13.5, 11.09, 14.2, 20.44, 18.73, 15.32, 10.66, 11.7, 12.45, 15.08, 19.68, 15.77, 17.01, 14.69, 10.24, 8.18, 8.46, 9.95, 13.51, 11.37, 12.45, 14.93, 13.49, 14.73, 10.77, 9.72, 11.69, 15.87, 15.83, 10.52, 15.45, 15.48, 16.68, 14.35, 12.82, 16.13, 9.44, 5.28, 15.9, 4.66, 3.79, 5.53, 5.94, 9.95, 9.18, 8.81, 12.12, 8.35, 9.54, 9.13, 11.63, 11.41, 9.83, 12.27, 16.14, 16.08, 14.75, 14.19, 14.54, 12.87, 11.73, 10.92, 15.79, 13.55, 11.61, 12.35, 13.13, 11.93, 4.71, 7.0, 7.41, 6.739761, 3.07, 7.018067, 3.61, 4.9, 6.38, 7.62, 6.5, 8.59, 8.23, 8.85, 7.68, 5.07, 6.38, 4.63, 3.470423, 3.469155, 6.738451, 5.321408, 4.63, 4.61, 5.18, 4.46, 5.24, 5.4, 4.86, 6.42, 7.8, 8.61, 9.91, 7.93, 6.27, 8.11, 4.67, 11.94, 2.01, 2.01, 1.32, 2.7, 4.83, 5.71, 6.11, 7.56, 6.6, 7.49, 5.72, 5.36, 6.58, 9.21, 10.43, 11.1, 11.24, -0.26, -0.06, 10.56, 10.78, 9.27, 9.57, 8.82, 8.33, 7.67, 4.51, 8.77, 6.87, 9.5, 8.95, 8.51, 10.0, 8.83, 11.04, 8.39, 10.21, 10.62, 14.07, 9.08, 12.03, 13.81, 14.08, 13.6, 13.92, 14.51, 15.6, 13.43, 10.46, 10.68, 8.73, 8.56, 9.7, 6.65, 5.42, 4.53, 6.57, 7.91, 5.52, -4.54, -6.95, 5.12, 29.42, 28.49],"柴油裂解价差":[5.51, 4.34, 5.71, 4.44, 5.63, 6.11, 6.8, 8.01, 7.16, 5.67, 4.89, 4.68, 3.91, 3.75, 5.65, 5.57, 5.99, 6.87, 6.64, 7.26, 7.99, 7.41, 7.07, 7.05, 7.26, 6.5, 6.48, 6.89, 6.58, 6.8, 6.42, 6.48, 7.34, 9.55, 9.22, 9.79, 11.26, 13.72, 14.98, 14.0, 12.6, 11.65, 10.48, 7.69, 11.36, 13.57, 12.83, 13.72, 16.03, 15.25, 17.75, 18.33, 17.26, 18.41, 28.54, 23.28, 28.17, 36.4, 36.96, 39.84, 50.12, 45.69, 53.31, 52.85, 47.31, 37.64, 43.51, 59.45, 61.06, 69.53, 74.69, 60.25, 46.48, 43.86, 33.86, 35.37, 35.97, 37.53, 44.03, 53.98, 44.15, 46.84, 25.78, 32.57, 31.1, 51.59, 48.57, 42.59, 46.66, 44.26, 43.68, 41.27, 36.15, 37.19, 34.47, 42.65, 34.21, 37.37, 32.24, 36.84, 37.89, 38.28, 30.47, 21.46, 22.04, 25.76, 25.54, 24.67, 21.04, 19.18, 14.67, 13.3, 10.41, 12.95, 14.42, 16.57, 14.15, 15.08, 17.13, 19.38, 21.61, 16.15, 18.55, 18.55, 22.37, 27.71, 32.95, 32.69, 33.63, 31.82, 30.34, 32.58, 35.78, 33.53, 29.91, 40.53, 28.85, 25.93, 24.78, 25.04, 20.77, 24.03, 22.27, 24.6, 21.23, 22.25, 22.66, 23.21, 22.98, 22.81, 24.61, 24.21, 28.76, 28.33, 25.02, 23.81, 21.92, 20.42, 19.43, 19.04, 16.3, 13.91, 17.11, 14.08, 12.97, 6.46, 13.65, 12.83, 12.489761, 13.74, 14.558067, 15.41, 17.1, 17.23, 15.52, 14.85, 15.13, 15.07, 16.21, 15.49, 15.71, 13.29, 11.04, 12.180423, 9.659155, 9.988451, 11.381408, 13.06, 13.04, 11.83, 13.12, 14.26, 15.87, 16.19, 16.98, 15.65, 8.61, 16.42, 17.15, 14.36, 17.45, 14.25, 24.72, 13.72, 13.72, 8.74, 10.1, 11.31, 11.97, 15.14, 14.29, 13.24, 12.96, 12.05, 13.4, 13.55, 15.2, 16.39, 14.85, 17.02, 2.78, 4.49, 15.77, 15.8, 20.65, 18.51, 19.64, 20.15, 20.72, 19.69, 21.56, 16.91, 16.91, 15.6, 15.96, 19.17, 18.32, 19.94, 19.89, 22.97, 22.63, 22.53, 21.51, 25.06, 31.8, 29.55, 34.37, 21.89, 21.53, 20.57, 19.51, 18.34, 18.68, 15.93, 18.93, 22.81, 21.58, 20.65, 20.42, 22.08, 21.24, 52.43, 59.84, 65.62, 94.2, 177.74, 108.54]}},
+  px:{labels:["2021-01-01", "2021-01-08", "2021-01-15", "2021-01-22", "2021-01-29", "2021-02-05", "2021-02-12", "2021-02-19", "2021-02-26", "2021-03-05", "2021-03-12", "2021-03-19", "2021-03-26", "2021-04-02", "2021-04-09", "2021-04-16", "2021-04-23", "2021-04-30", "2021-05-07", "2021-05-14", "2021-05-21", "2021-05-28", "2021-06-04", "2021-06-11", "2021-06-18", "2021-06-25", "2021-07-02", "2021-07-09", "2021-07-16", "2021-07-23", "2021-07-30", "2021-08-06", "2021-08-13", "2021-08-20", "2021-08-27", "2021-09-03", "2021-09-10", "2021-09-17", "2021-09-24", "2021-10-08", "2021-10-15", "2021-10-22", "2021-10-29", "2021-11-05", "2021-11-12", "2021-11-19", "2021-11-26", "2021-12-03", "2021-12-10", "2021-12-17", "2021-12-24", "2021-12-31", "2022-01-07", "2022-01-14", "2022-01-21", "2022-01-28", "2022-02-11", "2022-02-18", "2022-02-25", "2022-03-04", "2022-03-11", "2022-03-18", "2022-03-25", "2022-04-01", "2022-04-08", "2022-04-15", "2022-04-22", "2022-04-29", "2022-05-06", "2022-05-13", "2022-05-20", "2022-05-27", "2022-06-03", "2022-06-10", "2022-06-17", "2022-06-24", "2022-07-01", "2022-07-08", "2022-07-15", "2022-07-22", "2022-07-29", "2022-08-05", "2022-08-12", "2022-08-19", "2022-08-26", "2022-09-02", "2022-09-09", "2022-09-17", "2022-09-23", "2022-09-30", "2022-10-07", "2022-10-14", "2022-10-21", "2022-10-28", "2022-11-04", "2022-11-11", "2022-11-18", "2022-11-25", "2022-12-02", "2022-12-09", "2022-12-16", "2022-12-23", "2022-12-30", "2023-01-06", "2023-01-13", "2023-01-20", "2023-01-27", "2023-02-03", "2023-02-10", "2023-02-17", "2023-02-24", "2023-03-03", "2023-03-10", "2023-03-17", "2023-03-24", "2023-03-31", "2023-04-07", "2023-04-14", "2023-04-21", "2023-04-28", "2023-05-05", "2023-05-12", "2023-05-19", "2023-05-26", "2023-06-02", "2023-06-09", "2023-06-16", "2023-06-23", "2023-06-30", "2023-07-07", "2023-07-14", "2023-07-21", "2023-07-28", "2023-08-04", "2023-08-11", "2023-08-18", "2023-08-25", "2023-09-01", "2023-09-08", "2023-09-15", "2023-09-22", "2023-09-29", "2023-10-06", "2023-10-13", "2023-10-20", "2023-10-27", "2023-11-03", "2023-11-10", "2023-11-17", "2023-11-24", "2023-12-01", "2023-12-08", "2023-12-15", "2023-12-22", "2023-12-29", "2024-01-05", "2024-01-12", "2024-01-19", "2024-01-26", "2024-02-02", "2024-02-09", "2024-02-16", "2024-02-23", "2024-03-01", "2024-03-08", "2024-03-15", "2024-03-22", "2024-03-29", "2024-04-05", "2024-04-12", "2024-04-19", "2024-04-26", "2024-05-03", "2024-05-10", "2024-05-17", "2024-05-24", "2024-05-31", "2024-06-07", "2024-06-14", "2024-06-21", "2024-06-28", "2024-07-05", "2024-07-12", "2024-07-19", "2024-07-26", "2024-08-02", "2024-08-09", "2024-08-16", "2024-08-23", "2024-08-30", "2024-09-06", "2024-09-13", "2024-09-20", "2024-09-27", "2024-10-04", "2024-10-11", "2024-10-18", "2024-10-25", "2024-11-01", "2024-11-08", "2024-11-15", "2024-11-22", "2024-11-29", "2024-12-06", "2024-12-13", "2024-12-20", "2024-12-27", "2025-01-03", "2025-01-10", "2025-01-17", "2025-01-24", "2025-01-31", "2025-02-07", "2025-02-14", "2025-02-21", "2025-02-28", "2025-03-07", "2025-03-14", "2025-03-21", "2025-03-28", "2025-04-04", "2025-04-11", "2025-04-18", "2025-04-25", "2025-05-02", "2025-05-09", "2025-05-16", "2025-05-23", "2025-05-30", "2025-06-06", "2025-06-13", "2025-06-20", "2025-06-27", "2025-07-04", "2025-07-11", "2025-07-18", "2025-07-25", "2025-08-01", "2025-08-08", "2025-08-15", "2025-08-22", "2025-08-29", "2025-09-05", "2025-09-12", "2025-09-19", "2025-09-26", "2025-10-10", "2025-10-17", "2025-10-24", "2025-10-31", "2025-11-07", "2025-11-14", "2025-11-21", "2025-11-28", "2025-12-05", "2025-12-12", "2025-12-19", "2025-12-26", "2026-01-02", "2026-01-09", "2026-01-16", "2026-01-23", "2026-01-30", "2026-02-06", "2026-02-13", "2026-02-20", "2026-02-27", "2026-03-06", "2026-03-13", "2026-03-20", "2026-03-27", "2026-04-03", "2026-04-10"],series:{"长丝利润":[276.42146, 294.955752, 327.394912, 253.838496, 69.540929, 275.807522, 271.858407, 356.93031, 518.279867, 623.97677, 873.185841, 939.209071, 775.702434, 739.496681, 830.293142, 659.303097, 736.576327, 576.371681, 546.02323, 691.742257, 504.457965, 297.793142, 384.607301, 448.307522, 403.606195, 230.857301, 315.630531, 570.779867, 461.598451, 366.620575, 288.036504, 304.579646, 191.615044, 358.821903, 402.892699, 317.920354, 353.794248, 271.211283, 113.727876, 220.287611, 603.849558, 993.06969, 988.108407, 796.559735, 828.799779, 667.201327, 580.636062, 616.294248, 354.026549, 382.61615, 336.122788, 333.35177, 266.266593, 397.566372, 576.139381, 255.481195, 432.577434, 546.81969, 366.02323, 221.515487, 407.113938, 215.774336, 250.17146, 113.97677, 33.119469, 1.974558, 62.190265, -162.129425, -81.852876, -70.553097, 67.948009, 58.290929, 164.087389, -18.384956, 160.785398, 279.640487, 283.174779, 29.518805, 374.137168, 376.128319, 280.702434, 405.763274, 208.490044, 404.568584, 304.081858, 219.972345, 139.795354, 166.19469, 121.045354, 278.113938, 333.86615, 427.267699, 304.911504, 355.984513, 105.448009, 63.816372, -106.460177, -47.55531, 22.367257, 226.410398, 303.949115, 305.077434, 269.435841, 486.869469, 316.327434, 144.823009, 144.823009, 471.603982, 504.325221, 419.950221, 339.391593, 239.303097, 289.513274, 206.780973, 55.486726, 71.25, 230.309735, 44.137168, 56.830752, 134.966814, 221.349558, 302.605088, 282.892699, 411.554204, 435.018963, 514.446903, 299.618363, 286.47677, 261.222345, 192.544248, 184.712389, 212.704646, 191.216814, 325.138274, 282.892699, 259.82854, 218.462389, 116.897124, 309.225664, 246.670354, 324.524336, 317.289823, 317.289823, 314.933628, 301.858407, 192.776549, -7.400442, 34.961283, -37.450221, 188.810841, 276.786504, 229.529867, 241.095133, 100.619469, 172.251106, 137.870575, 150.547566, 110.810841, 77.588496, 200.50885, 189.42146, 189.42146, 244.002212, 290.863938, 314.259956, 156.550885, 137.568584, 107.734513, 121.785398, 211.582965, 85.320796, 102.388274, 71.913717, 130.387168, 36.650442, 159.68031, 201.112832, 271.115044, 271.961283, 288.096239, 260.143805, 265.884956, 262.284292, 316.158186, 241.728982, 229.496681, 274.811947, 240.630531, 314.880531, 254.525442, 444.640487, 349.705752, 346.702434, 237.275442, 63.799779, 338.259956, 366.487832, 311.628319, 294.852876, 219.663717, 300.268805, 221.668142, 176.432522, 196.377212, 146.346239, 240.487832, 258.30531, 273.451327, 290.727876, 242.57854, 350.893805, 350.960177, 311.897124, 313.821903, 265.443584, 285.219027, 380.153761, 348.905973, 245.386062, 155.88385, 146.004425, 271.848451, 183.404867, 83.757743, 98.638274, 86.176991, 195.199115, 236.283186, 204.225664, 210.461283, 172.201327, 114.414823, 249.036504, 217.566372, 132.949115, -11.917035, 24.096239, 165.232301, 148.92146, 231.25885, 149.747788, 220.181416, 311.356195, 282.806416, 223.599558, 191.853982, 237.30531, 268.655973, 163.012168, 159.915929, 228.331858, 215.22677, 259.682522, 233.53208, 158.512168, 161.57854, 2.120575, -30.355088, -7.539823, 18.637168, 166.875, 25.884956, 225.580752, 313.125, 308.210177, 308.210177, 306.597345, 180.849558, 537.212389, 580.61615, 402.998894, 428.465708, 764.200221],"PTA利润":[142.366126, 105.398909, 110.230252, 13.699677, 111.529194, 44.304132, 38.930786, 123.810208, 236.268474, 199.660068, 180.144437, 65.662691, -84.498299, -20.190603, -65.111742, 12.194435, 12.229698, 117.225155, 153.701373, -37.040877, -14.047161, 98.12583, 89.243465, 37.705831, 75.926822, 256.590285, 237.708298, 194.798549, 246.316565, 286.521397, 364.924487, 267.087813, 233.846526, 54.031166, 55.93255, 42.62085, -35.177859, 22.030633, 152.501242, 369.776604, 364.846637, 244.796295, 140.473769, -5.003174, 37.994491, 13.772765, 42.600981, -72.96748, 40.284562, 43.750831, 251.642665, 291.907059, 418.847312, 445.392737, 114.645292, 235.49504, 229.856852, 87.857421, 63.321184, 80.617844, 65.371899, 182.979376, -20.085052, -29.553329, 1.377733, -2.195686, 40.879487, 144.784318, 192.679156, 152.285515, 183.449177, 169.503015, 204.361934, -80.74177, 319.015686, 7.106691, -6.969636, 251.637655, -46.117269, 79.611568, -5.656521, 101.7075, 226.456045, 122.774172, 192.183224, 391.052154, 500.155482, 284.686761, 406.650437, 141.146333, -105.979956, 11.523894, 168.772717, 16.973734, -16.011828, 39.943723, 257.517546, 62.323096, 69.556549, 107.729099, 145.842351, 122.462611, 180.485231, 53.642139, 114.459071, 122.22957, 122.22957, -41.07878, -149.984305, -101.125166, 18.127558, 104.443633, 99.781961, 118.831875, 170.431648, 279.874891, 171.772806, 142.427979, 173.599269, 199.701101, 232.591069, 61.832609, 104.756776, -35.314007, 40.469819, 13.852577, 58.338854, 8.142651, 37.188207, 57.931916, 58.768652, 48.826698, -25.497076, -36.757378, -137.108315, 0.697935, -16.433145, 0.132545, -162.56137, -28.302772, -66.756223, -60.323982, -60.323982, -36.116711, 20.504027, 28.147879, 86.875709, 133.493833, 169.336969, 56.351404, -11.26365, 187.87136, 107.933019, 94.23178, 79.395766, 71.425473, -5.461069, 78.241522, 109.621075, 98.186037, 117.038086, 52.32448, 67.187655, 67.580547, 107.584661, 16.997293, 1.557935, -2.141686, 48.377677, 17.941786, 2.16421, 25.205075, 89.187887, 41.258258, 48.891345, 46.183815, 72.999125, 59.721647, 72.493418, 63.015274, 68.74664, 106.882297, 95.954819, 110.757127, 94.578385, 61.004508, -57.880604, 35.462624, -4.57451, 30.215783, 5.28313, 8.307337, 16.592605, -1.111014, -70.003662, 67.865533, 23.219777, 40.394714, 7.320203, 69.564666, 34.210788, 28.602545, 42.315442, -8.967045, -2.770491, -9.217012, -16.538984, -2.347032, 44.021078, -12.866551, -23.613879, -23.314768, -37.485214, 19.437717, -30.110925, -0.302359, 8.104905, 8.54255, 10.670651, 12.227538, -35.33268, 24.295269, -6.847548, 48.617538, 118.366937, 125.971192, 40.256781, 77.947719, 21.880543, 102.568349, 190.755747, 75.229715, 86.608002, -25.586627, -102.497946, -4.234915, -5.791022, -114.720723, -96.781741, -47.354025, 54.434129, -67.604888, -106.115743, -140.145098, -115.528374, -60.194582, -55.874328, -106.258052, -125.90334, -100.029196, -87.727525, -46.144251, -127.055838, -88.443335, -51.912498, -91.897874, -10.558996, 66.023634, 39.336278, 33.252342, 0.774004, 138.302151, 96.512698, 69.840256, 80.953464, 80.953464, -2.819522, 55.543841, -96.77159, -195.92489, 1.234883, 71.560954, -59.781579],"PX利润":[2.701875, 205.17615, 18.8064, 13.761975, -20.6358, 71.91405, 20.4459, 235.141263, 808.32945, 396.3816, 314.4813, 221.94945, -132.47325, -27.890775, -143.2728, 235.671034, 283.89528, 478.28579, 491.401465, 414.693054, 342.023612, 180.774408, 174.485074, 163.522481, 314.764575, 435.112447, 326.815254, 262.879188, 307.967385, 267.603138, 279.847044, 277.944649, 245.701061, -44.560013, -33.91605, 45.172875, -39.656988, 422.850888, 118.16417, 94.007968, 284.784485, 164.979407, -58.720491, -81.449493, -378.299943, -501.802776, -510.265442, -1031.34545, -765.752929, -623.107519, -592.92648, 58.32027, -68.893713, 80.152522, 256.949451, 252.190813, 603.413643, 295.763746, 559.285155, 1146.567429, 977.710313, 307.134371, 391.193223, -827.617176, -678.577014, 298.113356, -164.398816, 82.307664, 481.550858, 468.245862, 642.601008, 929.9445, 635.29473, 1815.677392, 787.269599, 1005.700435, 929.26359, 571.182285, 220.920525, 141.45375, 446.79195, 191.084025, 506.0475, 487.778928, 469.412098, 455.944271, 528.602186, 1069.675508, 849.671559, 958.726275, 1457.691408, 877.141406, 621.78108, 580.834638, 362.569036, 554.113188, 302.665076, 195.681767, 88.855612, 310.045007, 281.360405, 507.862341, 431.981573, 517.21281, 521.809859, 703.789515, 702.136149, 682.2288, 588.367602, 413.156175, 455.908725, 415.965932, 538.914105, 945.176959, 1130.219595, 1141.156228, 1125.537731, 1191.923835, 1211.091568, 1071.263672, 1081.513818, 972.026959, 842.349504, 856.22184, 659.006927, 1031.584407, 1297.404075, 1263.3552, 1263.6507, 1203.598575, 1209.978825, 1174.2531, 1221.25545, 1021.26045, 987.629775, 921.116625, 952.9245, 1124.13205, 1070.7243, 1164.618, 1081.58085, 993.062925, 999.98805, 863.6463, 687.4596, 716.79735, 821.5356, 814.80435, 860.03835, 734.56785, 601.77375, 587.01885, 458.1558, 633.4842, 625.8222, 748.2564, 803.649, 801.871781, 699.1146, 703.48575, 576.943763, 676.044, 690.13215, 627.684375, 377.302875, 520.598625, 475.708875, 633.634312, 682.333369, 642.228377, 737.226281, 553.07077, 464.797985, 613.480885, 680.389781, 823.547922, 796.047726, 867.204085, 764.968157, 614.270672, 578.791831, 497.777553, 531.071064, 474.405646, 497.896065, 591.315522, 485.869095, 300.044491, 213.435833, 152.99235, 36.59975, -141.391524, -173.426699, 6.272353, -18.12577, -118.170724, -165.896396, -209.690097, -235.772532, -233.942782, -127.758645, -237.422828, -257.019647, -187.672669, -219.161646, -111.797868, -206.743768, -275.330517, -202.242892, -10.259374, -126.037416, -126.011119, 10.365244, -120.450019, 19.199014, -81.802937, -17.893382, -156.3777, -75.710976, -76.885201, 259.477819, -173.730893, -242.5404, -297.265463, -180.203869, 35.338012, 352.255255, 245.837395, 354.227864, 232.587482, -114.840025, 206.924448, 348.413405, 283.199519, 247.034738, 210.573693, 310.261304, 194.271176, 279.047334, 184.062664, 163.692348, 178.956722, 74.214973, 117.093047, 49.819947, -49.22379, 21.975406, 171.617413, 70.768941, 98.269806, 142.793159, 168.628036, 287.78371, 223.60425, 227.93175, 374.129325, 495.409605, 756.464527, 786.912385, 739.639461, 710.304014, 656.769943, 561.978918, 376.725424, 367.075134, 366.294658, 396.856797, 287.119575, 71.761869, -577.972568, -730.113102, -694.64603, -459.858335]}},
+  pu:{labels:["2016-01-08", "2016-01-15", "2016-01-22", "2016-01-29", "2016-02-05", "2016-02-12", "2016-02-19", "2016-02-26", "2016-03-04", "2016-03-11", "2016-03-18", "2016-03-25", "2016-04-01", "2016-04-08", "2016-04-15", "2016-04-22", "2016-04-29", "2016-05-06", "2016-05-13", "2016-05-20", "2016-05-27", "2016-06-03", "2016-06-10", "2016-06-17", "2016-06-24", "2016-07-01", "2016-07-08", "2016-07-15", "2016-07-22", "2016-07-29", "2016-08-05", "2016-08-12", "2016-08-19", "2016-08-26", "2016-09-02", "2016-09-09", "2016-09-16", "2016-09-23", "2016-09-30", "2016-10-07", "2016-10-14", "2016-10-21", "2016-10-28", "2016-11-04", "2016-11-11", "2016-11-18", "2016-11-25", "2016-12-02", "2016-12-09", "2016-12-16", "2016-12-23", "2016-12-30", "2017-01-06", "2017-01-13", "2017-01-20", "2017-01-27", "2017-02-03", "2017-02-10", "2017-02-17", "2017-02-24", "2017-03-03", "2017-03-10", "2017-03-17", "2017-03-24", "2017-03-31", "2017-04-07", "2017-04-14", "2017-04-21", "2017-04-28", "2017-05-05", "2017-05-12", "2017-05-19", "2017-05-26", "2017-06-02", "2017-06-09", "2017-06-16", "2017-06-23", "2017-06-30", "2017-07-07", "2017-07-14", "2017-07-21", "2017-07-28", "2017-08-04", "2017-08-11", "2017-08-18", "2017-08-25", "2017-09-01", "2017-09-08", "2017-09-15", "2017-09-22", "2017-09-29", "2017-10-06", "2017-10-13", "2017-10-20", "2017-10-27", "2017-11-03", "2017-11-10", "2017-11-17", "2017-11-24", "2017-12-01", "2017-12-08", "2017-12-15", "2017-12-22", "2017-12-29", "2018-01-05", "2018-01-12", "2018-01-19", "2018-01-26", "2018-02-02", "2018-02-09", "2018-02-16", "2018-02-23", "2018-03-02", "2018-03-09", "2018-03-16", "2018-03-23", "2018-03-30", "2018-04-06", "2018-04-13", "2018-04-20", "2018-04-27", "2018-05-04", "2018-05-11", "2018-05-18", "2018-05-25", "2018-06-01", "2018-06-08", "2018-06-15", "2018-06-22", "2018-06-29", "2018-07-06", "2018-07-13", "2018-07-20", "2018-07-27", "2018-08-03", "2018-08-10", "2018-08-17", "2018-08-24", "2018-08-31", "2018-09-07", "2018-09-14", "2018-09-21", "2018-09-28", "2018-10-05", "2018-10-12", "2018-10-19", "2018-10-26", "2018-11-02", "2018-11-09", "2018-11-16", "2018-11-23", "2018-11-30", "2018-12-07", "2018-12-14", "2018-12-21", "2018-12-28", "2019-01-04", "2019-01-11", "2019-01-18", "2019-01-25", "2019-02-01", "2019-02-08", "2019-02-15", "2019-02-22", "2019-03-01", "2019-03-08", "2019-03-15", "2019-03-22", "2019-03-29", "2019-04-05", "2019-04-12", "2019-04-19", "2019-04-26", "2019-05-03", "2019-05-10", "2019-05-17", "2019-05-24", "2019-05-31", "2019-06-07", "2019-06-14", "2019-06-21", "2019-06-28", "2019-07-05", "2019-07-12", "2019-07-19", "2019-07-26", "2019-08-02", "2019-08-09", "2019-08-16", "2019-08-23", "2019-08-30", "2019-09-06", "2019-09-13", "2019-09-20", "2019-09-27", "2019-10-04", "2019-10-11", "2019-10-18", "2019-10-25", "2019-11-01", "2019-11-08", "2019-11-15", "2019-11-22", "2019-11-29", "2019-12-06", "2019-12-13", "2019-12-20", "2019-12-27", "2020-01-03", "2020-01-10", "2020-01-17", "2020-01-24", "2020-01-31", "2020-02-07", "2020-02-14", "2020-02-21", "2020-02-28", "2020-03-06", "2020-03-13", "2020-03-20", "2020-03-27", "2020-04-03", "2020-04-10", "2020-04-17", "2020-04-24", "2020-05-01", "2020-05-08", "2020-05-15", "2020-05-22", "2020-05-29", "2020-06-05", "2020-06-12", "2020-06-19", "2020-06-26", "2020-07-03", "2020-07-10", "2020-07-17", "2020-07-24", "2020-07-31", "2020-08-07", "2020-08-14", "2020-08-21", "2020-08-28", "2020-09-04", "2020-09-11", "2020-09-18", "2020-09-25", "2020-10-02", "2020-10-09", "2020-10-16", "2020-10-23", "2020-10-30", "2020-11-06", "2020-11-13", "2020-11-20", "2020-11-27", "2020-12-04", "2020-12-11", "2020-12-18", "2020-12-25", "2021-01-01", "2021-01-08", "2021-01-15", "2021-01-22", "2021-01-29", "2021-02-05", "2021-02-12", "2021-02-19", "2021-02-26", "2021-03-05", "2021-03-12", "2021-03-19", "2021-03-26", "2021-04-02", "2021-04-09", "2021-04-16", "2021-04-23", "2021-04-30", "2021-05-07", "2021-05-14", "2021-05-21", "2021-05-28", "2021-06-04", "2021-06-11", "2021-06-18", "2021-06-25", "2021-07-02", "2021-07-09", "2021-07-16", "2021-07-23", "2021-07-30", "2021-08-06", "2021-08-13", "2021-08-20", "2021-08-27", "2021-09-03", "2021-09-10", "2021-09-17", "2021-09-24", "2021-10-01", "2021-10-08", "2021-10-15", "2021-10-22", "2021-10-29", "2021-11-05", "2021-11-12", "2021-11-19", "2021-11-26", "2021-12-03", "2021-12-10", "2021-12-17", "2021-12-24", "2021-12-31", "2022-01-07", "2022-01-14", "2022-01-21", "2022-01-28", "2022-02-04", "2022-02-11", "2022-02-18", "2022-02-25", "2022-03-04", "2022-03-11", "2022-03-18", "2022-03-25", "2022-04-01", "2022-04-08", "2022-04-15", "2022-04-22", "2022-04-29", "2022-05-06", "2022-05-13", "2022-05-20", "2022-05-27", "2022-06-03", "2022-06-10", "2022-06-17", "2022-06-24", "2022-07-01", "2022-07-08", "2022-07-15", "2022-07-22", "2022-07-29", "2022-08-05", "2022-08-12", "2022-08-19", "2022-08-26", "2022-09-02", "2022-09-09", "2022-09-16", "2022-09-23", "2022-09-30", "2022-10-07", "2022-10-14", "2022-10-21", "2022-10-28", "2022-11-04", "2022-11-11", "2022-11-18", "2022-11-25", "2022-12-02", "2022-12-09", "2022-12-16", "2022-12-23", "2022-12-30", "2023-01-06", "2023-01-13", "2023-01-20", "2023-01-27", "2023-02-03", "2023-02-10", "2023-02-17", "2023-02-24", "2023-03-03", "2023-03-10", "2023-03-17", "2023-03-24", "2023-03-31", "2023-04-07", "2023-04-14", "2023-04-21", "2023-04-28", "2023-05-05", "2023-05-12", "2023-05-19", "2023-05-26", "2023-06-02", "2023-06-09", "2023-06-16", "2023-06-23", "2023-06-30", "2023-07-07", "2023-07-14", "2023-07-21", "2023-07-28", "2023-08-04", "2023-08-11", "2023-08-18", "2023-08-25", "2023-09-01", "2023-09-08", "2023-09-15", "2023-09-22", "2023-09-29", "2023-10-06", "2023-10-13", "2023-10-20", "2023-10-27", "2023-11-03", "2023-11-10", "2023-11-17", "2023-11-24", "2023-12-01", "2023-12-08", "2023-12-15", "2023-12-22", "2023-12-29", "2024-01-05", "2024-01-12", "2024-01-19", "2024-01-26", "2024-02-02", "2024-02-09", "2024-02-16", "2024-02-23", "2024-03-01", "2024-03-08", "2024-03-15", "2024-03-22", "2024-03-29", "2024-04-03", "2024-04-12", "2024-04-19", "2024-04-26", "2024-04-30", "2024-05-10", "2024-05-17", "2024-05-24", "2024-05-31", "2024-06-07", "2024-06-14", "2024-06-21", "2024-06-28", "2024-07-05", "2024-07-12", "2024-07-19", "2024-07-26", "2024-08-02", "2024-08-09", "2024-08-16", "2024-08-23", "2024-08-30", "2024-09-06", "2024-09-13", "2024-09-20", "2024-09-27", "2024-10-04", "2024-10-11", "2024-10-18", "2024-10-25", "2024-11-01", "2024-11-08", "2024-11-15", "2024-11-22", "2024-11-29", "2024-12-06", "2024-12-13", "2024-12-20", "2024-12-27", "2025-01-03", "2025-01-10", "2025-01-17", "2025-01-24", "2025-01-31", "2025-02-07", "2025-02-14", "2025-02-21", "2025-02-28", "2025-03-07", "2025-03-14", "2025-03-21", "2025-03-28", "2025-04-04", "2025-04-11", "2025-04-18", "2025-04-25", "2025-04-30", "2025-05-09", "2025-05-16", "2025-05-23", "2025-05-30", "2025-06-06", "2025-06-13", "2025-06-20", "2025-06-27", "2025-07-04", "2025-07-11", "2025-07-18", "2025-07-25", "2025-08-01", "2025-08-08", "2025-08-15", "2025-08-22", "2025-08-29", "2025-09-05", "2025-09-12", "2025-09-19", "2025-09-26", "2025-10-03", "2025-10-10", "2025-10-17", "2025-10-24", "2025-10-31", "2025-11-07", "2025-11-14", "2025-11-21", "2025-11-28", "2025-12-05", "2025-12-12", "2025-12-19", "2025-12-26", "2026-01-02", "2026-01-09", "2026-01-16", "2026-01-23", "2026-01-30", "2026-02-06", "2026-02-13", "2026-02-20", "2026-02-27", "2026-03-06", "2026-03-13", "2026-03-20", "2026-03-27", "2026-04-03", "2026-04-10"],series:{"MDI价格":[11535.0, 11360.0, 11170.0, 11075.0, 11005.0, 11075.0, 10880.0, 11260.0, 11560.0, 11470.0, 11465.0, 11675.0, 12180.0, 12425.0, 12765.0, 13040.0, 13425.0, 13770.0, 13770.0, 13460.0, 13530.0, 13885.0, 13815.0, 13635.0, 13565.0, 13430.0, 13315.0, 13140.0, 13000.0, 13070.0, 13175.0, 13770.0, 14995.0, 15140.0, 15340.0, 16065.0, 16180.0, 18500.0, 19485.0, 19485.0, 18640.0, 19985.0, 21250.0, 20165.0, 19580.0, 19720.0, 21090.0, 20560.0, 20770.0, 21690.0, 22145.0, 21970.0, 22840.0, 24420.0, 25155.0, 25155.0, 25155.0, 26030.0, 26500.0, 26360.0, 26665.0, 28725.0, 28105.0, 27200.0, 26425.0, 26205.0, 25735.0, 24405.0, 23295.0, 22575.0, 22435.0, 23750.0, 23110.0, 22510.0, 22260.0, 22180.0, 23600.0, 23280.0, 23875.0, 24855.0, 24340.0, 25025.0, 25950.0, 26795.0, 29135.0, 28850.0, 30775.0, 34775.0, 41150.0, 36200.0, 36050.0, 36050.0, 34100.0, 31135.0, 30385.0, 28355.0, 27800.0, 28320.0, 27825.0, 28130.0, 27780.0, 28162.5, 28360.0, null, 28210.0, 27730.0, 27551.0, 27500.0, 27900.0, 27620.0, 27620.0, 27550.0, 26390.0, 25300.0, 23635.0, 23470.0, 22850.0, 22455.0, 23275.0, 23340.0, 23375.0, 24735.0, 24350.0, 24350.0, 23755.0, 23505.0, 23395.0, 22900.0, 22725.0, 21955.0, 21460.0, 21720.0, 22280.0, 23205.0, 23130.0, 22220.0, 22155.0, 21230.0, 20975.0, 20245.0, 19390.0, 18705.0, 17955.0, 18025.0, 17020.0, 16400.0, 16075.0, 15815.0, 15535.0, 15250.0, 15250.0, 15185.0, 14805.0, 14500.0, 14435.0, 14510.0, 14435.0, 14955.0, 15340.0, 15305.0, 15305.0, 15305.0, 15550.0, 15935.0, 16980.0, 17180.0, 17220.0, 18530.0, 19730.0, 20125.0, 20020.0, 19705.0, 19480.0, 19380.0, 18525.0, 16800.0, 15505.0, 14985.0, 14485.0, 13125.0, 13545.0, 13965.0, 13785.0, 13525.0, 13935.0, 14695.0, 15450.0, 14985.0, 14775.0, 14475.0, 14445.0, 14375.0, 13985.0, 13755.0, 14235.0, 14200.0, 13955.0, 14035.0, 13860.0, 13785.0, 13785.0, 13960.0, 13890.0, 13925.0, 14160.0, 14060.0, 13765.0, 13855.0, 13770.0, 13790.0, 13720.0, 13720.0, 13720.0, 13720.0, 13720.0, 13510.0, 13260.0, 12870.0, 12630.0, 12585.0, 12375.0, 11790.0, 11515.0, 11725.0, 11780.0, null, 12250.0, 12445.0, 12455.0, 12490.0, 12745.0, 12640.0, 12545.0, null, 12320.0, 12090.0, 12100.0, 12020.0, 13225.0, 13585.0, 13725.0, 14280.0, 15365.0, 15830.0, 16590.0, 17120.0, 17710.0, 18375.0, 19430.0, 22875.0, 25550.0, 26305.0, 25480.0, 23725.0, 22745.0, 20550.0, 20620.0, 19520.0, 19080.0, 19225.0, null, 19045.0, 18765.0, 19950.0, 20495.0, 20515.0, null, 21675.0, 27275.0, 26325.0, 25425.0, 24000.0, 23025.0, 20325.0, 20280.0, 19675.0, 20005.0, 19055.0, 18765.0, 18095.0, 18050.0, 17755.0, 17320.0, 17210.0, 17725.0, 18745.0, 19430.0, 21280.0, 21805.0, 21355.0, 21120.0, 20465.0, 19285.0, 19285.0, 19395.0, 20020.0, 20415.0, 20965.0, 21005.0, null, 23625.0, 22825.0, 21895.0, 21720.0, 20425.0, 20655.0, 20405.0, 19980.0, 19115.0, 19100.0, 19400.0, 19740.0, 20370.0, 21260.0, 21330.0, 21125.0, 21265.0, 21265.0, 21945.0, 21720.0, 20950.0, 20940.0, 20895.0, 19855.0, 20095.0, 20255.0, 19905.0, 19275.0, 19590.0, 19450.0, 19165.0, 18630.0, 18480.0, 18130.0, 17530.0, 18345.0, 18920.0, 19585.0, 19295.0, 18815.0, 18470.0, 17945.0, 17355.0, 17105.0, 16460.0, 16415.0, 16065.0, 15315.0, 15595.0, 16950.0, 17235.0, 17305.0, null, 17935.0, 18205.0, 16695.0, 16515.0, 16025.0, 15435.0, 15240.0, 14775.0, 14925.0, 14845.0, 14845.0, 15145.0, 15190.0, 15730.0, 15945.0, 15945.0, 17335.0, 16930.0, 16705.0, 17000.0, 17600.0, 17420.0, 17055.0, 16545.0, 16190.0, 15550.0, 15725.0, 16375.0, 16310.0, 16100.0, 16130.0, 16105.0, 16495.0, 16810.0, 17085.0, 17250.0, 17250.0, 16875.0, 16785.0, 16765.0, 17010.0, 17450.0, 18550.0, 18795.0, 19145.0, 18975.0, 18565.0, 18535.0, 18480.0, 18005.0, 17585.0, 17475.0, 16775.0, 16785.0, 17045.0, 17445.0, 17875.0, 17625.0, 17370.0, 17080.0, 17045.0, 17110.0, 17005.0, 16675.0, 16700.0, 16835.0, 16810.0, 17190.0, 17345.0, 17345.0, 17345.0, 17925.0, 18390.0, 17875.0, 17605.0, 17450.0, 16975.0, 17080.0, 17080.0, 17335.0, 17400.0, 17390.0, 17610.0, 17665.0, 17710.0, 17975.0, 18335.0, 18225.0, 17880.0, 17695.0, 17275.0, 17135.0, 17435.0, 17725.0, 17775.0, 17745.0, 17910.0, 17845.0, 17700.0, 18090.0, 18205.0, 18095.0, 18095.0, 18165.0, 18275.0, 18425.0, 18295.0, 18260.0, 18495.0, 18515.0, 18445.0, 18265.0, 18270.0, 18410.0, 18235.0, 18265.0, 18220.0, 18245.0, 18385.0, 18445.0, 18445.0, 19090.0, 18895.0, 18625.0, 18470.0, 18020.0, 17425.0, 17125.0, 16685.0, 16520.0, 15765.0, 14980.0, 15960.0, 15665.0, 16230.0, 16880.0, 16775.0, 16710.0, 16625.0, 16415.0, 16335.0, 16090.0, 15630.0, 15465.0, 15800.0, 15960.0, 16385.0, 16820.0, 16510.0, 16365.0, 16155.0, 16045.0, 16165.0, 15990.0, 16070.0, 16055.0, 15915.0, 15540.0, 15585.0, 15725.0, 15755.0, 15925.0, 16000.0, 16105.0, 16150.0, 16180.0, 15995.0, 15575.0, 15490.0, 15310.0, 15060.0, 14945.0, 14950.0, 14965.0, 14965.0, 14965.0, 15225.0, 16340.0, 18445.0, 18790.0, 19680.0, 21355.0, 21890.0],"MDI价差":[8668.5, 8462.0, 8287.75, 8114.0, 8107.0, 8177.0, 7950.5, 8362.0, 8599.0, 8351.5, 8252.0, 8506.1, 8967.0, 9243.5, 9552.0, 9827.0, 10180.5, 10494.0, 10494.0, 10209.2, 10317.0, 10703.5, 10665.0, 10579.5, 10383.5, 10248.5, 9976.0, 9801.0, 9661.0, 9762.5, 9962.0, 10525.5, 11624.5, 11769.5, 11938.0, 12663.0, 12778.0, 15129.5, 16114.5, 16114.5, 15206.5, 16520.0, 17722.0, 16637.0, 15989.0, 15908.5, 16995.0, 16150.0, 15667.0, 16744.5, 17388.5, 17339.5, 18115.0, 19411.5, 19989.0, 19989.0, 19957.5, 20486.0, 20956.0, 21194.0, 21719.5, 24126.0, 23758.0, 23231.0, 22330.0, 21921.0, 21419.5, 20341.5, 19231.5, 18637.5, 18655.0, 19655.0, 19109.5, 18478.0, 18291.0, 18148.0, 19757.0, 19374.0, 20000.5, 20980.5, 20497.0, 21182.0, 22170.0, 22920.5, 25292.0, 24944.0, 26869.0, 30869.0, 37244.0, 32249.9, 32144.0, 32144.0, 30257.0, 27247.9, 26416.0, 24354.5, 23642.0, 24225.0, 23604.0, 23877.5, 23338.5, 23658.0, 23997.25, null, 23831.5, 23304.25, 23062.25, 22995.5, 23427.0, 23225.75, 23383.25, 23250.25, 22153.25, 21315.25, 19713.25, 19674.25, 19101.5, 18627.75, 19384.75, 19418.25, 19484.75, 20844.75, 20302.25, 20333.75, 19723.0, 19520.25, 19426.0, 18978.25, 18891.45, 18064.75, 17475.25, 17577.75, 18200.75, 18999.75, 18798.75, 17762.75, 17666.25, 16709.75, 16454.75, 15787.75, 15027.25, 14310.75, 13576.5, 13646.5, 12736.0, 12100.25, 16075.0, 11924.75, 11818.0, 11611.75, 11690.5, 11830.25, 11418.75, 11098.0, 11458.25, 11706.5, 11615.75, 11962.5, 12410.5, 12328.25, 12243.2, 12243.2, 12463.0, 12800.75, 13861.5, 14171.75, 14281.05, 15506.0, 17068.25, 17406.55, 17248.0, 16901.5, 16667.05, 16592.25, 15683.7, 13974.45, 12717.25, 12134.25, 11650.0, 10195.5, 10495.8, 10837.05, 10518.45, 10116.7, 10551.9, 11463.1, 12211.8, 11866.5, 11514.75, 11088.75, 11011.5, 10802.9, 10353.05, 10047.45, 10584.15, 10596.4, 10442.75, 10529.05, 10316.25, 10414.5, 10427.1, 10517.05, 10488.0, 10460.0, 10584.75, 10382.06, 9985.0, 10138.0, 10100.25, 10113.95, 10003.0, 10003.0, 10003.0, 10129.0, 10286.5, 10013.5, 9999.75, 9562.5, 9876.9, 10191.0, 10516.5, 10215.0, 9404.5, 9551.5, 9827.0, null, 10171.0, 10265.2, 10328.75, 10363.75, 10502.2, 10403.5, 10343.15, null, 10338.65, 10105.5, 10112.35, 9934.7, 11026.3, 11398.9, 11532.6, 12106.5, 13185.2, 13574.6, 14400.75, 14940.2, 15574.3, 16296.0, 17344.7, 20682.6, 23294.6, 24043.3, 23086.0, 21069.55, 20209.25, 17885.1, 17753.5, 16729.1, 16267.05, 16519.15, null, 16147.0, 15904.8, 17070.9, 17508.8, 17213.8, null, 17951.7, 23003.6, 22189.05, 21260.7, 20172.75, 19093.8, 16151.25, 16122.0, 15309.1, 15437.5, 14370.95, 13835.25, 13014.05, 13173.8, 13042.6, 12374.5, 12390.5, 12826.75, 13531.75, 13949.0, 15902.95, 16513.0, 16094.5, 16086.3, 15708.5, 14582.05, 14616.7, 14622.75, 15099.7, 15308.85, 15720.25, 16062.65, null, 18484.2, 17492.05, 16785.7, 16938.3, 15599.2, 15939.45, 16029.65, 15840.9, 15064.1, 14986.1, 15169.55, 15374.1, 15755.25, 16607.45, 16557.75, 16447.25, 16414.0, 16414.0, 16996.35, 16872.15, 15925.75, 15648.0, 15540.0, 14610.25, 14667.55, 14937.8, 14537.4, 14036.55, 14168.85, 13906.0, 13542.25, 12890.7, 12611.55, 12100.9, 11497.75, 11856.0, 12824.75, 13562.2, 13310.0, 12987.5, 12781.1, 12086.0, 11370.0, 11986.25, 11483.0, 11642.75, 11327.4, 10574.25, 10740.85, 12070.65, 12311.55, 12435.1, null, 13068.25, 13313.05, 12080.25, 12168.0, 11583.5, 11053.35, 11075.7, 10676.85, 10826.85, 10756.3, 10756.3, 10964.95, 10940.65, 11436.55, 11582.25, 11582.25, 13047.85, 12564.1, 12304.45, 12508.1, 13045.1, 12830.45, 12622.95, 12037.35, 11581.55, 10859.65, 11015.75, 11750.8, 11799.2, 11749.85, 11896.4, 11880.85, 12349.6, 12708.7, 13084.5, 13384.95, 13299.9, 13013.1, 12768.75, 12531.4, 12609.45, 12882.5, 13699.0, 13903.05, 14199.5, 14038.95, 13606.9, 13224.1, 12954.9, 12854.75, 12507.2, 12397.2, 11933.45, 11650.5, 11910.5, 12420.75, 13061.8, 12663.75, 12660.75, 12755.05, 12682.25, 12731.5, 12437.5, 12101.2, 12069.5, 12110.0, 11880.25, 12156.3, 12125.45, 11930.15, 11930.15, 12563.7, 13145.25, 12507.4, 12042.1, 12088.7, 11528.65, 11599.0, 11611.6, 11743.75, 11799.3, 11899.55, 12056.55, 12098.95, 12040.0, 12081.35, 12472.85, 12287.25, 11926.5, 11694.25, 11636.5, 11641.4, 12023.3, 12467.65, 12357.0, 12405.75, 12580.2, 12537.25, 12310.35, 12750.75, 12985.45, 12803.0, 12976.25, 13109.25, 13471.25, 13769.3, 13686.55, 13739.75, 13959.0, 13988.45, 13789.3, 13631.35, 13554.45, 13666.1, 13491.1, 13722.7, 13602.1, 13668.05, 13615.9, 13657.0, 13622.35, 14248.45, 14003.05, 13748.8, 13773.35, 13521.8, 13059.1, 12856.75, 12464.0, 12220.25, 11786.55, 11051.95, 12104.4, 12058.25, 12667.35, 12996.05, 13013.9, 13043.4, 12930.05, 12405.05, 12287.25, 12316.3, 11919.3, 11685.0, 12060.95, 12129.6, 12548.3, 12964.4, 12663.85, 12518.85, 12415.95, 12331.15, 12451.15, 12282.45, 12375.05, 12432.5, 12292.5, 11996.25, 12091.65, 12332.45, 12412.85, 12510.4, 12610.6, 12737.65, 12801.55, 12837.85, 12674.9, 12217.1, 12135.25, 11952.1, 11576.1, 11183.9, 11072.35, 11153.5, 11188.15, 11188.15, 11388.3, 11586.65, 13253.8, 13680.7, 14208.45, 15836.2, 16566.5],"TDI价格":[11500.0, 11250.0, 11250.0, 11250.0, 11250.0, 11250.0, 11250.0, 11500.0, 11500.0, 11750.0, 11650.0, 11700.0, 11700.0, 12050.0, 12050.0, 12050.0, 12300.0, 12350.0, 13200.0, 14150.0, 15750.0, 16300.0, 16200.0, 15550.0, 15300.0, 14400.0, 14000.0, 13900.0, 14950.0, 15150.0, 15650.0, 16950.0, 17650.0, 17400.0, 18050.0, 17950.0, 18100.0, 19450.0, 26750.0, 26750.0, 53000.0, 44500.0, 40000.0, 33750.0, 31000.0, 30250.0, 30250.0, 29500.0, 28750.0, 28050.0, 27250.0, 27050.0, 27450.0, 28550.0, 28550.0, 28550.0, 28550.0, 31750.0, 31750.0, 31750.0, 31750.0, 31750.0, 31100.0, 29250.0, 28600.0, 27750.0, 28500.0, 28150.0, 27000.0, 26550.0, 26250.0, 26250.0, 26250.0, 25100.0, 24800.0, 24400.0, 23700.0, 22750.0, 22450.0, 26750.0, 30000.0, 31000.0, 32000.0, 34750.0, 41750.0, 40500.0, 39000.0, 39250.0, 39500.0, 38500.0, 36000.0, 36000.0, 38250.0, 42250.0, 40350.0, 37500.0, 36600.0, 34650.0, 34750.0, 35500.0, 34600.0, 36000.0, 38500.0, null, 39750.0, 39150.0, 39850.0, 40650.0, 40250.0, 39000.0, 39000.0, 39400.0, 39250.0, 38250.0, 35750.0, 33750.0, 33550.0, 33150.0, 27500.0, 26750.0, 25250.0, 26250.0, 29150.0, 29500.0, 29500.0, 29000.0, 28600.0, 25400.0, 24600.0, 24400.0, 25650.0, 26000.0, 29750.0, 29900.0, 30850.0, 31100.0, 30800.0, 30450.0, 30000.0, 28500.0, 25500.0, 25000.0, 24000.0, 23500.0, 21000.0, 19000.0, 18500.0, 17750.0, 17750.0, 19000.0, 20400.0, 20400.0, 21000.0, 19650.0, 18000.0, 16350.0, 14500.0, 13900.0, 14250.0, 13850.0, 13950.0, 13950.0, 14000.0, 13700.0, 13050.0, 13250.0, 13000.0, 13650.0, 14750.0, 15500.0, 14950.0, 16500.0, 17250.0, 17500.0, 15750.0, 14650.0, 13150.0, 12650.0, 12650.0, 12650.0, 12700.0, 12800.0, 13250.0, 13650.0, 13850.0, 13650.0, 14000.0, 13900.0, 13400.0, 12900.0, 12750.0, 12750.0, 12600.0, 12650.0, 12700.0, 12700.0, 12900.0, 13150.0, 12850.0, 12500.0, 12000.0, 11600.0, 11450.0, 11100.0, 11050.0, 11050.0, 11250.0, 11250.0, 11500.0, 11550.0, 11550.0, 11550.0, 11550.0, 11350.0, 11350.0, 11150.0, 11100.0, 11000.0, 10900.0, 10800.0, 10150.0, 9400.0, 9500.0, 9300.0, 9200.0, null, 9850.0, 10300.0, 10700.0, 10800.0, 11250.0, 11200.0, 11100.0, null, 10000.0, 10450.0, 10650.0, 10400.0, 11150.0, 12050.0, 13000.0, 13800.0, 13750.0, 16550.0, 17500.0, 17000.0, 16900.0, 17000.0, 17000.0, 16500.0, 16600.0, 16100.0, 14250.0, 13050.0, 13400.0, 12550.0, 12400.0, 12500.0, 12400.0, 12400.0, null, 12350.0, 12300.0, 12500.0, 12900.0, 13500.0, null, 14600.0, 18500.0, 19500.0, 17000.0, 16000.0, 15850.0, 15600.0, 15500.0, 15650.0, 15150.0, 14500.0, 14500.0, 13800.0, 13800.0, 13750.0, 13350.0, 13350.0, 13250.0, 13550.0, 13100.0, 14250.0, 14500.0, 14750.0, 14550.0, 14300.0, 13850.0, 14750.0, 14050.0, 14400.0, 14000.0, 13850.0, 13750.0, null, 13950.0, 14500.0, 14700.0, 15000.0, 15000.0, 14500.0, 14250.0, 14000.0, 14100.0, 14350.0, 15650.0, 15650.0, 15700.0, 16900.0, 17600.0, 18150.0, 19000.0, 19000.0, 19650.0, 19600.0, 19050.0, 19050.0, 19550.0, 19250.0, 19550.0, 19200.0, 18950.0, 17750.0, 17900.0, 17400.0, 17150.0, 16900.0, 16550.0, 16350.0, 16500.0, 16500.0, 16500.0, 17700.0, 17700.0, 17700.0, 17700.0, 16450.0, 16450.0, 15250.0, 15250.0, 15250.0, 17250.0, 18000.0, 19000.0, 19400.0, 19400.0, 20400.0, null, 20400.0, 26500.0, 22000.0, 20000.0, 20000.0, 17550.0, 17300.0, 17050.0, 16950.0, 16950.0, 16950.0, 18750.0, 18750.0, 19100.0, 19100.0, 19100.0, 20650.0, 20400.0, 19800.0, 19500.0, 18800.0, 17850.0, 17800.0, 17800.0, 17450.0, 17600.0, 18700.0, 19650.0, 19600.0, 19700.0, 20050.0, 18250.0, 16650.0, 15750.0, 16500.0, 17150.0, 17200.0, 17000.0, 18150.0, 17500.0, 17450.0, 17750.0, 18800.0, 18400.0, 18800.0, 18550.0, 18250.0, 17600.0, 17800.0, 18050.0, 17800.0, 17800.0, 18800.0, 18400.0, 17500.0, 16700.0, 16850.0, 16750.0, 16800.0, 16500.0, 16600.0, 16450.0, 16550.0, 16700.0, 16600.0, 16650.0, 16600.0, 16750.0, 16750.0, 16750.0, 16750.0, 17100.0, 17600.0, 17000.0, 16650.0, 16300.0, 15750.0, 15300.0, 15700.0, 15400.0, 15400.0, 15050.0, 14500.0, 14500.0, 14500.0, 14650.0, 14450.0, 14350.0, 14200.0, 14000.0, 13450.0, 13150.0, 13250.0, 13250.0, 13350.0, 14000.0, 13950.0, 13800.0, 13600.0, 13650.0, 13650.0, 13000.0, 12750.0, 12750.0, 12800.0, 13100.0, 12900.0, 12850.0, 13000.0, 12700.0, 12700.0, 12850.0, 12850.0, 12950.0, 12850.0, 12950.0, 12950.0, 13200.0, 14000.0, 14050.0, 14050.0, 14650.0, 14500.0, 13000.0, 12650.0, 12100.0, 12200.0, 12050.0, 11900.0, 11750.0, 11250.0, 10400.0, 10600.0, 10800.0, 11400.0, 11950.0, 12500.0, 12500.0, 12200.0, 11200.0, 11300.0, 11550.0, 12200.0, 12500.0, 14500.0, 15500.0, 17500.0, 16300.0, 15800.0, 15300.0, 14650.0, 13900.0, 13700.0, 13550.0, 13550.0, 13550.0, 13300.0, 13300.0, 13300.0, 13250.0, 13550.0, 13900.0, 13900.0, 13750.0, 14200.0, 14700.0, 14600.0, 14450.0, 14500.0, 14300.0, 14000.0, 13850.0, 14200.0, 14500.0, 14600.0, 14600.0, 15100.0, 16650.0, 18000.0, 18000.0, 19000.0, 20150.0, 20300.0],"TDI价差":[8331.25, 8162.5, 8276.25, 8243.75, 8227.5, 8227.5, 8243.75, 8464.5, 8250.0, 8597.5, 8432.5, 8515.0, 8498.75, 8881.25, 8897.5, 8865.0, 9131.25, 9197.5, 10112.5, 11046.25, 12711.25, 13277.5, 13145.0, 12543.75, 12245.0, 11361.25, 10961.25, 10942.5, 12025.0, 12225.0, 12708.75, 14018.5, 14595.0, 14263.75, 14783.75, 14440.0, 14590.0, 15972.5, 23328.214286, 23240.0, 49425.0, 40973.75, 36441.25, 30321.25, 27522.5, 26740.0, 26756.25, 25990.0, 24980.0, 24312.5, 23756.25, 23475.0, 23810.0, 24763.75, 24845.0, 24715.0, 24585.0, 27882.5, 27947.5, 28045.0, 28045.0, 28093.75, 27395.0, 25772.5, 25070.5, 24077.5, 24827.5, 24575.0, 23477.0, 23157.0, 22857.0, 22727.0, 22811.5, 21687.5, 21355.0, 20987.5, 20482.5, 19467.5, 19232.5, 23487.0, 26756.5, 27717.5, 28646.0, 31402.5, 38435.0, 37185.0, 35685.0, 35935.0, 36029.0, 35016.0, 32522.5, 32522.5, 34792.0, 38811.5, 36885.5, 33964.0, 32960.0, 31114.0, 31142.5, 31889.25, 30947.0, 32223.5, 34795.0, null, 35980.0, 35269.5, 36067.0, 36847.5, 36525.5, 35373.0, 35379.5, 35760.0, 35740.0, 34818.0, 32337.5, 30344.0, 30072.5, 29640.0, 23860.0, 23110.0, 21350.0, 22382.5, 24977.0, 25242.5, 25353.0, 25002.5, 24505.0, 21435.0, 20836.5, 20565.0, 21750.0, 21937.5, 25752.5, 25740.0, 26592.5, 26784.0, 26620.5, 26160.0, 25547.5, 23982.5, 20852.5, 20430.5, 19456.5, 18956.5, 16307.0, 14255.0, 13755.0, 12907.5, 13200.0, 15002.5, 16591.0, 16955.0, 17568.0, 16205.0, 14815.0, 13262.5, 11347.5, 10520.0, 10980.5, 10548.0, 10635.0, 10635.0, 10717.5, 10385.0, 9605.0, 9772.5, 9522.5, 10107.5, 11389.5, 11957.5, 11440.0, 12990.0, 13766.0, 14035.5, 12344.0, 11240.75, 9835.0, 9335.0, 9465.0, 9325.25, 9320.0, 9335.5, 9723.75, 10075.0, 10340.0, 10094.5, 10425.0, 10390.0, 9831.5, 9227.5, 8986.5, 8687.5, 8518.0, 8503.0, 8520.5, 8523.75, 8772.5, 9347.5, 9112.5, 8977.0, 8457.5, 7781.25, 7693.0, 7408.0, 7345.0, 7423.0, 7636.0, 7675.0, 7925.0, 7958.75, 7910.0, 7897.0, 7897.0, 8067.5, 8100.0, 7737.5, 7967.0, 7847.5, 8235.0, 8395.0, 8018.0, 7515.0, 7355.0, 7155.0, 6957.5, null, 7672.5, 8090.0, 8353.5, 8460.0, 8903.5, 8964.0, 8805.5, null, 7692.5, 8240.0, 8505.0, 8255.0, 8940.0, 9836.75, 10803.0, 11622.5, 11572.5, 14340.0, 15264.0, 14777.0, 14703.0, 14822.5, 14809.5, 14322.5, 14429.0, 13981.0, 12092.0, 10742.5, 11125.0, 10216.5, 9962.5, 10017.0, 9826.0, 9930.0, null, 9828.0, 9713.0, 9835.0, 10053.0, 10419.0, null, 11187.5, 14567.5, 15697.5, 13210.5, 12425.0, 12294.5, 12025.0, 11944.5, 12010.0, 11529.5, 10795.0, 10697.5, 9997.5, 10017.0, 10012.5, 9547.5, 9632.0, 9480.0, 9845.0, 9343.0, 10499.5, 10769.0, 10960.5, 10728.0, 10523.5, 10080.0, 11025.5, 10358.0, 10721.0, 10327.5, 10132.0, 10058.0, null, 10147.5, 10210.0, 10299.5, 10515.0, 10658.0, 10229.5, 10038.0, 9840.0, 10492.5, 10658.0, 12049.0, 12049.0, 12011.25, 13065.0, 13797.5, 14233.75, 14970.0, 14963.5, 15321.0, 15310.0, 14402.5, 14025.5, 14220.0, 14063.0, 14376.0, 14260.0, 14036.0, 12998.5, 13012.0, 12596.5, 12236.0, 11732.5, 11285.0, 11098.0, 11118.0, 10520.0, 10633.75, 12035.25, 11970.25, 12077.5, 12613.75, 11441.75, 11542.5, 10342.5, 10375.0, 10440.0, 12170.25, 12930.0, 13930.0, 14427.5, 14330.0, 15388.5, null, 15404.75, 21517.75, 17082.75, 15199.75, 15157.5, 12681.5, 12782.5, 12721.0, 12985.0, 12936.25, 13017.5, 14785.0, 14573.75, 14790.5, 14712.5, 14712.5, 16174.75, 15785.0, 15133.0, 14722.5, 14071.25, 13088.75, 13266.25, 13233.75, 12854.5, 12819.25, 13760.0, 14836.75, 14822.5, 15036.25, 15565.0, 13612.25, 12041.5, 11144.75, 11933.75, 12518.75, 12611.0, 12404.5, 13470.0, 12592.5, 12523.0, 12696.25, 13632.5, 13265.0, 13587.0, 13324.0, 12994.75, 12231.0, 12372.5, 12752.5, 12580.5, 12580.5, 13931.5, 13671.25, 12917.5, 12052.5, 12378.0, 12310.5, 12363.75, 12203.5, 12284.0, 12192.5, 12201.5, 12393.75, 12267.75, 12301.5, 12115.0, 12174.0, 12187.0, 12157.75, 12157.75, 12316.0, 12864.75, 12251.75, 11866.0, 11499.75, 10829.5, 10321.0, 10753.5, 10375.5, 10385.25, 10116.5, 9605.5, 9625.0, 9586.0, 9664.5, 9506.75, 9416.5, 9295.75, 9141.25, 8516.5, 8206.75, 8362.0, 8462.75, 8618.0, 9313.5, 9318.75, 9334.5, 9176.75, 9607.0, 9555.0, 8989.5, 8801.25, 8785.0, 8809.0, 9300.75, 9048.75, 9076.75, 9275.5, 9021.0, 8907.25, 9086.5, 9024.75, 9085.75, 8911.0, 9072.75, 9007.75, 9072.5, 9742.5, 9799.0, 9792.5, 10343.75, 10167.75, 8651.5, 8441.25, 8005.0, 8316.25, 8228.0, 7941.5, 7785.0, 7561.25, 6766.5, 7038.0, 7420.0, 7945.25, 8375.0, 8999.75, 8960.75, 8647.75, 7368.25, 7406.5, 7845.0, 8508.0, 8873.0, 10925.0, 11882.75, 13905.5, 12773.75, 12244.5, 11718.5, 11123.75, 10396.5, 10206.25, 10062.75, 10069.25, 10127.75, 9874.5, 9907.0, 9952.5, 9899.25, 10114.75, 10422.5, 10422.5, 10318.0, 10784.25, 11336.25, 11259.0, 11073.25, 11110.25, 10871.25, 10542.0, 10379.0, 10592.5, 10960.75, 11083.5, 11083.5, 11573.75, 12457.5, 13157.5, 13043.75, 13712.25, 14742.0, 15148.75]}},
 };
-
-// ==================== 颜色 ====================
-const COLORS = ["#1d4ed8","#0f766e","#ea580c","#dc2626","#7c3aed","#0891b2","#be123c","#4f46e5"];
-
-// ==================== 工具函数 ====================
-function makeChip(label, val, prevVal) {
-  const v = [val, prevVal].map(x => x !== null && x !== undefined);
-  if (!v[0] || !v[1]) return '';
-  const delta = +(val - prevVal).toFixed(2);
-  const dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'neutral';
-  const cls = dir === 'up' ? 'chip-up' : dir === 'down' ? 'chip-down' : 'chip-neutral';
-  const arrow = dir === 'up' ? '↑' : dir === 'down' ? '↓' : '→';
-  const sign = delta > 0 ? '+' : '';
-  return `<span class="change-chip ${cls}"><span class="chip-dot"></span>${label} ${arrow}${sign}${delta}</span>`;
+const C=['#1d4ed8','#0f766e','#ea580c','#dc2626','#7c3aed','#0891b2','#be123c','#4f46e5','#ca8a04','#15803d'];
+const CB=['rgba(29,78,216,.68)','rgba(15,118,110,.68)','rgba(234,88,12,.68)','rgba(220,38,38,.68)','rgba(124,58,237,.68)','rgba(8,145,178,.68)','rgba(190,18,60,.68)','rgba(79,70,229,.68)','rgba(202,138,4,.68)','rgba(21,128,61,.68)'];
+const baseOpts=(dualY=false,pctLeft=false,pctRight=false)=>({
+  responsive:true,maintainAspectRatio:false,
+  plugins:{
+    legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:8,font:{size:11},padding:10}},
+    tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>{
+      if(ctx.parsed.y==null)return ` ${ctx.dataset.label}: —`;
+      const v=ctx.parsed.y;
+      const yid=ctx.dataset.yAxisID||'yLeft';
+      const isPct=(yid==='yLeft'&&pctLeft)||(yid==='yRight'&&pctRight);
+      return ` ${ctx.dataset.label}: ${isPct?(v*100).toFixed(1)+'%':v.toLocaleString(undefined,{maximumFractionDigits:3})}`;
+    }}}
+  },
+  scales:{
+    x:{ticks:{maxRotation:45,font:{size:10},maxTicksLimit:14},grid:{color:'#f1f5f9'}},
+    yLeft:{type:'linear',position:'left',ticks:{font:{size:10},callback:v=>pctLeft?(v*100).toFixed(0)+'%':v.toLocaleString()},grid:{color:'#f1f5f9'},title:{display:false}},
+    ...(dualY?{yRight:{type:'linear',position:'right',ticks:{font:{size:10},callback:v=>pctRight?(v*100).toFixed(0)+'%':v.toLocaleString()},grid:{drawOnChartArea:false},title:{display:false}}}:{})
+  }
+});
+function mkLine(id,labels,seriesObj,rightKeys=[],pctLeft=false,pctRight=false){
+  const cv=document.getElementById(id);if(!cv)return;
+  const ds=Object.keys(seriesObj).map((k,i)=>({label:k,data:seriesObj[k],borderColor:C[i%C.length],backgroundColor:C[i%C.length]+'22',yAxisID:rightKeys.includes(k)?'yRight':'yLeft',borderWidth:2.5,tension:.25,pointRadius:2,pointHoverRadius:4.5,spanGaps:true}));
+  new Chart(cv,{type:'line',data:{labels,datasets:ds},options:baseOpts(rightKeys.length>0,pctLeft,pctRight)});
 }
-
-function getLastTwo(arr) {
-  const valid = arr.map((v,i)=>({v,i})).filter(x=>x.v!==null&&x.v!==undefined);
-  if (valid.length < 2) return [null, null];
-  return [valid[valid.length-1].v, valid[valid.length-2].v];
+function mkBar(id,labels,seriesObj,stacked=false,rightKeys=[],yMin=undefined){
+  const cv=document.getElementById(id);if(!cv)return;
+  const ds=Object.keys(seriesObj).map((k,i)=>({label:k,data:seriesObj[k],backgroundColor:CB[i%CB.length],borderRadius:3,yAxisID:rightKeys.includes(k)?'yRight':'yLeft',stack:stacked?'s1':undefined,order:rightKeys.includes(k)?1:2}));
+  const opts=baseOpts(rightKeys.length>0);
+  if(stacked){opts.scales.x.stacked=true;opts.scales.yLeft.stacked=true;}
+  if(yMin!==undefined){opts.scales.yLeft.min=yMin;}
+  new Chart(cv,{type:'bar',data:{labels,datasets:ds},options:opts});
 }
-
-function makeLegend(el, seriesNames, colors) {
-  el.innerHTML = seriesNames.map((n,i) =>
-    `<span class="legend-item"><span class="legend-line" style="background:${colors[i%colors.length]}"></span>${n}</span>`
-  ).join('');
+function mkStackedBar(id,labels,seriesObj){
+  const cv=document.getElementById(id);if(!cv)return;
+  const ds=Object.keys(seriesObj).map((k,i)=>({label:k,data:seriesObj[k],backgroundColor:CB[i%CB.length],borderRadius:2,yAxisID:'yLeft',stack:'s1'}));
+  const opts=baseOpts(false);opts.scales.x.stacked=true;opts.scales.yLeft.stacked=true;
+  new Chart(cv,{type:'bar',data:{labels,datasets:ds},options:opts});
 }
-
-// ==================== Chart.js 通用选项 ====================
-function baseOptions(unit='', yLabel='') {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index', intersect: false },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(15,23,42,0.92)',
-        titleColor: '#94a3b8', bodyColor: '#fff',
-        padding: 10, cornerRadius: 8,
-        callbacks: {
-          label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) + unit : '—'}`
-        }
-      }
-    },
-    scales: {
-      x: {
-        grid: { color: 'rgba(148,163,184,0.12)' },
-        ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 12 }
-      },
-      y: {
-        grid: { color: 'rgba(148,163,184,0.12)' },
-        ticks: { color: '#94a3b8', font: { size: 11 },
-          callback: v => v + unit
-        },
-        title: yLabel ? { display: true, text: yLabel, color: '#94a3b8', font: { size: 11 } } : { display: false }
-      }
-    }
-  };
+function mkCombo(id,labels,seriesObj,barKeys=[],rightKeys=[],pctLeft=false,pctRight=false){
+  const cv=document.getElementById(id);if(!cv)return;
+  const ds=Object.keys(seriesObj).map((k,i)=>{const isBar=barKeys.includes(k);return{type:isBar?'bar':'line',label:k,data:seriesObj[k],backgroundColor:isBar?CB[i%CB.length]:C[i%C.length]+'22',borderColor:C[i%C.length],yAxisID:rightKeys.includes(k)?'yRight':'yLeft',borderWidth:isBar?0:2.5,borderRadius:isBar?3:0,tension:.25,pointRadius:2,pointHoverRadius:4.5,spanGaps:true,stack:isBar?'s1':undefined,order:isBar?2:1};});
+  new Chart(cv,{type:'bar',data:{labels,datasets:ds},options:baseOpts(rightKeys.length>0,pctLeft,pctRight)});
 }
-
-function makeDatasets(seriesObj, colors) {
-  return Object.entries(seriesObj).map(([label, values], i) => ({
-    label,
-    data: values,
-    borderColor: colors[i % colors.length],
-    backgroundColor: colors[i % colors.length] + '22',
-    borderWidth: 2.5,
-    tension: 0.25,
-    fill: false,
-    pointRadius: 3,
-    pointHoverRadius: 5,
-    pointBorderWidth: 1.5,
-    pointBackgroundColor: '#fff',
-    spanGaps: true
-  }));
+function lastTwo(arr){const v=arr.map((x,i)=>[x,i]).filter(([x])=>x!=null);return v.length<2?null:[v[v.length-2][0],v[v.length-1][0]];}
+function makeDeltaChips(id,seriesObj,maxChips=8){
+  const el=document.getElementById(id+'-chips');if(!el)return;
+  const chips=[];
+  for(const[k,vals]of Object.entries(seriesObj)){
+    const p=lastTwo(vals);if(!p)continue;
+    const d=p[1]-p[0];
+    const arrow=d>0.001?'↑':d<-0.001?'↓':'→';
+    const cls=d>0.001?'dc-up':d<-0.001?'dc-dn':'dc-flat';
+    const abs=Math.abs(d);
+    const ds=abs<0.01?abs.toFixed(4):abs<10?abs.toFixed(2):abs.toFixed(1);
+    chips.push(`<span class="delta-chip ${cls}">● ${k} ${arrow}${ds}</span>`);
+  }
+  el.innerHTML=chips.slice(0,maxChips).join('');
 }
-
-// ==================== 绘制各图 ====================
-
-// 1. 用电量
-(function() {
-  const chips = document.getElementById('elec-chips');
-  let html = '';
-  const names = Object.keys(DATA.elec);
-  names.forEach(n => {
-    const [last, prev] = getLastTwo(DATA.elec[n]);
-    html += makeChip(n, last, prev);
-  });
-  chips.innerHTML = html;
-
-  new Chart(document.getElementById('chart-elec'), {
-    type: 'line',
-    data: { labels: DATA.labels_elec, datasets: makeDatasets(DATA.elec, COLORS) },
-    options: baseOptions('%', '同比增速 (%)')
-  });
-  makeLegend(document.getElementById('legend-elec'), names, COLORS);
-})();
-
-// 2. 利用小时（只画有数据的系列）
-(function() {
-  const validSeries = {};
-  Object.entries(DATA.lx).forEach(([k,v]) => {
-    if (v.some(x => x !== null)) validSeries[k] = v;
-  });
-  const names = Object.keys(validSeries);
-  const colors = COLORS.slice(0, names.length);
-
-  const chips = document.getElementById('lx-chips');
-  let html = '';
-  names.forEach(n => {
-    const [last, prev] = getLastTwo(validSeries[n]);
-    html += makeChip(n, last, prev);
-  });
-  chips.innerHTML = html;
-
-  new Chart(document.getElementById('chart-lx'), {
-    type: 'line',
-    data: { labels: DATA.labels_lx, datasets: makeDatasets(validSeries, colors) },
-    options: baseOptions(' h', '利用小时 (h)')
-  });
-  makeLegend(document.getElementById('legend-lx'), names, colors);
-})();
-
-// 3. 快递件量
-(function() {
-  const chips = document.getElementById('kd-chips');
-  let html = '';
-  const names = Object.keys(DATA.kd);
-  names.forEach(n => {
-    const [last, prev] = getLastTwo(DATA.kd[n]);
-    html += makeChip(n, last, prev);
-  });
-  chips.innerHTML = html;
-
-  new Chart(document.getElementById('chart-kd'), {
-    type: 'line',
-    data: { labels: DATA.labels_kd, datasets: makeDatasets(DATA.kd, COLORS) },
-    options: baseOptions('%', '同比增速 (%)')
-  });
-  makeLegend(document.getElementById('legend-kd'), names, COLORS);
-})();
-
-// 4. 航运指数 - 图1: BDI + BDTI（双轴）
-(function() {
-  const s1 = { 'BDI': DATA.hy['BDI'], 'BDTI': DATA.hy['BDTI'] };
-  const names1 = Object.keys(s1);
-  const colors1 = ['#1d4ed8', '#0f766e'];
-
-  const chips = document.getElementById('hy-chips-1');
-  let html = '';
-  names1.forEach((n,i) => {
-    const [last, prev] = getLastTwo(s1[n]);
-    html += makeChip(n, last, prev);
-  });
-  chips.innerHTML = html;
-
-  new Chart(document.getElementById('chart-hy1'), {
-    type: 'line',
-    data: {
-      labels: DATA.labels_hy,
-      datasets: [
-        { label: 'BDI', data: s1['BDI'], borderColor: '#1d4ed8', backgroundColor: '#1d4ed822',
-          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
-          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' },
-        { label: 'BDTI', data: s1['BDTI'], borderColor: '#0f766e', backgroundColor: '#0f766e22',
-          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
-          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yRight' }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(15,23,42,0.92)', titleColor: '#94a3b8', bodyColor: '#fff',
-          padding: 10, cornerRadius: 8
-        }
-      },
-      scales: {
-        x: { grid: { color: 'rgba(148,163,184,0.12)' },
-             ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 10 } },
-        yLeft:  { type: 'linear', position: 'left',  grid: { color: 'rgba(148,163,184,0.12)' },
-                  ticks: { color: '#1d4ed8', font: { size: 11 } }, title: { display: true, text: 'BDI', color: '#1d4ed8', font:{size:11} } },
-        yRight: { type: 'linear', position: 'right', grid: { drawOnChartArea: false },
-                  ticks: { color: '#0f766e', font: { size: 11 } }, title: { display: true, text: 'BDTI', color: '#0f766e', font:{size:11} } }
-      }
-    }
-  });
-  makeLegend(document.getElementById('legend-hy1'), names1, colors1);
-})();
-
-// 5. 航运指数 - 图2: SCFI + VLCC + PDCI
-(function() {
-  const s2Names = ['SCFI','VLCC','PDCI'];
-  const s2Colors = ['#ea580c','#7c3aed','#0891b2'];
-  const s2 = {};
-  s2Names.forEach(n => s2[n] = DATA.hy[n]);
-
-  const chips = document.getElementById('hy-chips-2');
-  let html = '';
-  s2Names.forEach(n => {
-    const [last, prev] = getLastTwo(s2[n]);
-    html += makeChip(n, last, prev);
-  });
-  chips.innerHTML = html;
-
-  new Chart(document.getElementById('chart-hy2'), {
-    type: 'line',
-    data: {
-      labels: DATA.labels_hy,
-      datasets: [
-        { label: 'SCFI', data: s2['SCFI'], borderColor: '#ea580c', backgroundColor: '#ea580c22',
-          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
-          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' },
-        { label: 'VLCC', data: s2['VLCC'], borderColor: '#7c3aed', backgroundColor: '#7c3aed22',
-          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
-          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yRight' },
-        { label: 'PDCI', data: s2['PDCI'], borderColor: '#0891b2', backgroundColor: '#0891b222',
-          borderWidth: 2.5, tension: 0.25, fill: false, pointRadius: 2, pointHoverRadius: 4,
-          pointBackgroundColor: '#fff', spanGaps: true, yAxisID: 'yLeft' }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: 'rgba(15,23,42,0.92)', titleColor: '#94a3b8', bodyColor: '#fff',
-          padding: 10, cornerRadius: 8
-        }
-      },
-      scales: {
-        x: { grid: { color: 'rgba(148,163,184,0.12)' },
-             ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45, autoSkip: true, maxTicksLimit: 10 } },
-        yLeft:  { type: 'linear', position: 'left',  grid: { color: 'rgba(148,163,184,0.12)' },
-                  ticks: { color: '#94a3b8', font: { size: 11 } }, title: { display: true, text: 'SCFI / PDCI', color: '#94a3b8', font:{size:11} } },
-        yRight: { type: 'linear', position: 'right', grid: { drawOnChartArea: false },
-                  ticks: { color: '#7c3aed', font: { size: 11 }, callback: v => (v/10000).toFixed(1)+'w' },
-                  title: { display: true, text: 'VLCC (美元/天)', color: '#7c3aed', font:{size:11} } }
-      }
-    }
-  });
-  makeLegend(document.getElementById('legend-hy2'), s2Names, s2Colors);
-})();
-
-// ==================== Tab 切换 ====================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.board').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('board-' + btn.dataset.board).classList.add('active');
+window.addEventListener('DOMContentLoaded',()=>{
+  mkLine('chart_elec',D.elec.labels,D.elec.series);makeDeltaChips('chart_elec',D.elec.series);
+  mkLine('chart_gen',D.gen.labels,D.gen.series);makeDeltaChips('chart_gen',D.gen.series);
+  mkLine('chart_ep',D.ep.labels,D.ep.series);makeDeltaChips('chart_ep',D.ep.series);
+  mkLine('chart_prx',D.prx.labels,D.prx.series);makeDeltaChips('chart_prx',D.prx.series);
+  mkLine('chart_gas',D.gas.labels,D.gas.series);makeDeltaChips('chart_gas',D.gas.series);
+  mkLine('chart_cld',D.cld.labels,D.cld.series);makeDeltaChips('chart_cld',D.cld.series);
+  mkLine('chart_avp',D.avp.labels,D.avp.series,['同比'],false,true);makeDeltaChips('chart_avp',D.avp.series);
+  mkLine('chart_lf',D.lf.labels,D.lf.series,[],true,false);makeDeltaChips('chart_lf',D.lf.series);
+  mkLine('chart_kd',D.kd.labels,D.kd.series);makeDeltaChips('chart_kd',D.kd.series);
+  mkLine('chart_kdp',D.kdp.labels,D.kdp.series,['顺丰']);makeDeltaChips('chart_kdp',D.kdp.series);
+  mkLine('chart_kdw',D.kdw.labels,D.kdw.series);makeDeltaChips('chart_kdw',D.kdw.series);
+  mkLine('chart_col',D.col.labels,D.col.series,['PDCI']);makeDeltaChips('chart_col',D.col.series);
+  mkLine('chart_bdi',D.bdi.labels,D.bdi.series,['BDI']);makeDeltaChips('chart_bdi',D.bdi.series);
+  mkBar('chart_gi',D.gi.labels,D.gi.series,false);makeDeltaChips('chart_gi',D.gi.series);
+  mkCombo('chart_tb',D.tb.labels,D.tb.series,['变压器','组合电器','开关柜','断路器','隔离开关','继保监控','避雷器','互感器','电容器','电抗器','其他'],['同比'],false,true);makeDeltaChips('chart_tb',D.tb.series);
+  mkLine('chart_exp_reg',D.exp_reg.labels,D.exp_reg.series,[],true,false);makeDeltaChips('chart_exp_reg',D.exp_reg.series);
+  mkLine('chart_exp_prd',D.exp_prd.labels,D.exp_prd.series,[],true,false);makeDeltaChips('chart_exp_prd',D.exp_prd.series);
+  mkLine('chart_oil',D.oil.labels,D.oil.series);makeDeltaChips('chart_oil',D.oil.series);
+  mkBar('chart_opec',D.opec.labels,D.opec.series,false,[],2000);makeDeltaChips('chart_opec',D.opec.series);
+  mkLine('chart_pet',D.pet.labels,D.pet.series);makeDeltaChips('chart_pet',D.pet.series);
+  mkStackedBar('chart_px',D.px.labels,D.px.series);makeDeltaChips('chart_px',D.px.series);
+  mkLine('chart_pu',D.pu.labels,D.pu.series,['MDI价差','TDI价差']);makeDeltaChips('chart_pu',D.pu.series);
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.board').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
   });
 });
 </script>
-</body>
-</html>
+</body></html>
